@@ -22,6 +22,7 @@
   align-items: center;
   gap: 1.85rem;
   font-size: 0.92rem;
+  white-space: nowrap;
 }
 
 .link,
@@ -63,20 +64,22 @@
 
   .navigation {
     gap: var(--space-4);
-    font-size: 0.84rem;
-  }
-
-  .futureControl {
-    display: none;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 28rem) {
-  .navigation {
+  .header {
+    width: calc(100% - 1.5rem);
     gap: var(--space-3);
   }
 
+  .navigation {
+    gap: 0.65rem;
+    font-size: 0.72rem;
+  }
+
   .wordmark {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 }
