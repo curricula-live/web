@@ -17,10 +17,6 @@ export function SignInDialog() {
       triggerClassName={styles.avatarButton}
     >
       <h2 className={styles.title}>Sign in</h2>
-      <p className={styles.description}>
-        Google will be the only sign-in method. Accounts will be used to save teaching sets and
-        planning work across devices.
-      </p>
 
       <button className={styles.googleButton} type="button" disabled>
         <span className={styles.googleMark} aria-hidden="true">
