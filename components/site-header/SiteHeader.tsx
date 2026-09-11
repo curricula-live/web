@@ -14,7 +14,7 @@ export function SiteHeader() {
           className={styles.futureControl}
           type="button"
           disabled
-          title="Teacher Planning is being built"
+          aria-label="Teacher Planning — coming later"
         >
           Teacher Planning
         </button>
@@ -25,7 +25,7 @@ export function SiteHeader() {
           className={styles.signIn}
           type="button"
           disabled
-          title="Google sign-in is not available yet"
+          aria-label="Sign in — Google sign-in coming later"
         >
           Sign in
         </button>
