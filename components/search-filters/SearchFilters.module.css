@@ -1,0 +1,114 @@
+.wrapper {
+  margin-top: var(--space-3);
+}
+
+.triggerRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #f1f4ef;
+  color: var(--color-text);
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.trigger:hover {
+  border-color: #bfc8c2;
+  background: #edf1ec;
+}
+
+.trigger svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-6);
+  margin-top: var(--space-3);
+  padding: 0.95rem 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.checkbox {
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1px solid #aeb8b2;
+  border-radius: 2px;
+  background: var(--color-surface);
+}
+
+.checkbox svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: white;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.note {
+  margin-left: auto;
+  color: #8e9791;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 44rem) {
+  .tray {
+    align-items: flex-start;
+  }
+
+  .note {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}

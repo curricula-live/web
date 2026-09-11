@@ -20,39 +20,26 @@
 .navigation {
   display: flex;
   align-items: center;
-  gap: 1.85rem;
+  gap: 1rem;
   font-size: 0.92rem;
   white-space: nowrap;
 }
 
-.link,
-.futureControl,
-.signIn {
+.futureControl {
   border: 0;
   background: transparent;
-  color: var(--color-text);
+  color: #58635d;
   padding: var(--space-2) 0;
 }
 
-.link {
-  transition: color var(--transition-fast);
-}
-
-.link:hover {
-  color: var(--color-accent);
-}
-
-.futureControl:disabled,
-.signIn:disabled {
+.futureControl:disabled {
   cursor: not-allowed;
 }
 
-.futureControl:disabled {
-  color: #58635d;
-}
-
-.signIn:disabled {
-  color: #9aa29d;
+.divider {
+  width: 1px;
+  height: 1.8rem;
+  background: var(--color-border);
 }
 
 @media (max-width: 44rem) {
@@ -63,7 +50,7 @@
   }
 
   .navigation {
-    gap: var(--space-4);
+    gap: 0.75rem;
     font-size: 0.8rem;
   }
 }
@@ -75,7 +62,7 @@
   }
 
   .navigation {
-    gap: 0.65rem;
+    gap: 0.6rem;
     font-size: 0.72rem;
   }
 

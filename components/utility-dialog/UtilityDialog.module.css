@@ -1,0 +1,117 @@
+.title {
+  margin: 0;
+  padding-right: 2.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.lead {
+  max-width: 32rem;
+  margin: var(--space-6) 0 0;
+  color: var(--color-text-muted);
+}
+
+.section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.section h3,
+.infoRow h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.section p,
+.infoRow p {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+}
+
+.infoRows,
+.contactRows {
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-6);
+  align-items: center;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.infoRow h3 {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.infoRow p {
+  margin-top: var(--space-1);
+  font-size: 0.88rem;
+}
+
+.futureLink {
+  color: #909993;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.contactRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-6);
+  align-items: center;
+  padding: 1.05rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.contactRow > span:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.contactRow strong {
+  font-weight: 650;
+}
+
+.contactRow > span:first-child > span:last-child {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.action {
+  color: var(--color-accent);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.contactRow:hover strong,
+.contactRow:hover .action {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 34rem) {
+  .infoRow,
+  .contactRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .futureLink,
+  .action {
+    justify-self: start;
+  }
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SearchFilters } from "@/components/search-filters/SearchFilters";
 import { SearchForm } from "@/components/search-form/SearchForm";
 import { SiteFooter } from "@/components/site-footer/SiteFooter";
 import { SiteHeader } from "@/components/site-header/SiteHeader";
@@ -144,8 +145,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </span>
             </nav>
 
+            <SearchFilters query={query} category={category} />
+
             <div className={styles.queryContext}>
-              <span>Results for</span>
+              {category !== "connections" && !unavailable ? (
+                <span>
+                  Showing {concepts.length} concept {concepts.length === 1 ? "match" : "matches"}
+                </span>
+              ) : (
+                <span>Results</span>
+              )}
+              <span>for</span>
               <strong>{query}</strong>
             </div>
 
