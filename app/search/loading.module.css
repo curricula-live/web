@@ -1,0 +1,211 @@
+.page {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2.5rem, 7vw, 5.5rem);
+  width: min(calc(100% - 4rem), 52rem);
+  margin: 0 auto;
+  padding: 2rem 0 5rem;
+}
+
+.copy {
+  min-width: 15rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+  letter-spacing: -0.025em;
+}
+
+.message {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+.animation {
+  position: relative;
+  width: 10rem;
+  height: 9rem;
+  flex: 0 0 auto;
+}
+
+.leafField {
+  position: absolute;
+  inset: 0;
+}
+
+.leaf {
+  position: absolute;
+  top: 0.2rem;
+  left: 50%;
+  width: 1.55rem;
+  height: auto;
+  opacity: 0;
+  transform-origin: 50% 80%;
+  will-change: transform, opacity;
+}
+
+.leafOne {
+  animation: leaf-one 4.8s ease-in-out infinite;
+}
+
+.leafTwo {
+  animation: leaf-two 4.8s ease-in-out infinite;
+}
+
+.leafThree {
+  animation: leaf-three 4.8s ease-in-out infinite;
+}
+
+.stack {
+  position: absolute;
+  right: 0.15rem;
+  bottom: 0.55rem;
+  left: 0.15rem;
+  height: 5.4rem;
+  animation: stack-settle 4.8s ease-in-out infinite;
+}
+
+.sheet {
+  position: absolute;
+  left: 50%;
+  height: 1.15rem;
+  border: 1px solid rgba(49, 92, 71, 0.1);
+  background: rgba(255, 255, 251, 0.88);
+  box-shadow: 0 0.28rem 0.75rem rgba(31, 38, 34, 0.05);
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0.18);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.sheetOne {
+  top: 0.25rem;
+  width: 7.6rem;
+  animation: sheet-one 4.8s ease-in-out infinite;
+}
+
+.sheetTwo {
+  top: 1.95rem;
+  width: 6.95rem;
+  animation: sheet-two 4.8s ease-in-out infinite;
+}
+
+.sheetThree {
+  top: 3.65rem;
+  width: 6.3rem;
+  animation: sheet-three 4.8s ease-in-out infinite;
+}
+
+.highlight {
+  position: absolute;
+  top: 0.21rem;
+  left: 1.25rem;
+  width: 2.1rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(49, 92, 71, 0.42), transparent);
+  opacity: 0;
+  animation: highlight 4.8s ease-in-out infinite;
+}
+
+@keyframes leaf-one {
+  0%, 3%, 30%, 100% { opacity: 0; }
+  5% { opacity: 0.86; transform: translate(-2.6rem, -0.2rem) rotate(-13deg); }
+  15% { opacity: 0.88; transform: translate(-1.75rem, 1.8rem) rotate(7deg); }
+  24% { opacity: 0.7; transform: translate(-0.65rem, 3.55rem) rotate(-4deg) scaleX(1); }
+  29% { opacity: 0; transform: translate(-0.15rem, 4.25rem) rotate(0deg) scaleX(2.3) scaleY(0.38); }
+}
+
+@keyframes leaf-two {
+  0%, 25%, 54%, 100% { opacity: 0; }
+  27% { opacity: 0.84; transform: translate(2.1rem, -0.25rem) rotate(12deg); }
+  38% { opacity: 0.88; transform: translate(1.2rem, 1.95rem) rotate(-8deg); }
+  48% { opacity: 0.68; transform: translate(0.35rem, 3.8rem) rotate(4deg) scaleX(1); }
+  53% { opacity: 0; transform: translate(0.05rem, 4.55rem) rotate(0deg) scaleX(2.15) scaleY(0.36); }
+}
+
+@keyframes leaf-three {
+  0%, 48%, 78%, 100% { opacity: 0; }
+  50% { opacity: 0.84; transform: translate(-1.9rem, -0.15rem) rotate(-9deg); }
+  61% { opacity: 0.88; transform: translate(-0.95rem, 2.15rem) rotate(9deg); }
+  71% { opacity: 0.66; transform: translate(0.1rem, 4.05rem) rotate(-3deg) scaleX(1); }
+  77% { opacity: 0; transform: translate(0.35rem, 4.8rem) rotate(0deg) scaleX(2) scaleY(0.34); }
+}
+
+@keyframes sheet-one {
+  0%, 21%, 94%, 100% { opacity: 0; transform: translateX(-50%) scaleX(0.16); }
+  29%, 86% { opacity: 0.78; transform: translateX(-50%) scaleX(1); }
+}
+
+@keyframes sheet-two {
+  0%, 45%, 94%, 100% { opacity: 0; transform: translateX(-50%) scaleX(0.16); }
+  53%, 86% { opacity: 0.76; transform: translateX(-50%) scaleX(1); }
+}
+
+@keyframes sheet-three {
+  0%, 69%, 94%, 100% { opacity: 0; transform: translateX(-50%) scaleX(0.16); }
+  77%, 86% { opacity: 0.74; transform: translateX(-50%) scaleX(1); }
+}
+
+@keyframes stack-settle {
+  0%, 75% { transform: translateY(0); }
+  80%, 86% { transform: translateY(2px); }
+  94%, 100% { transform: translateY(0); }
+}
+
+@keyframes highlight {
+  0%, 76%, 100% { opacity: 0; transform: translateX(0); }
+  79% { opacity: 0.5; }
+  87% { opacity: 0; transform: translateX(4.7rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf,
+  .sheet,
+  .stack,
+  .highlight {
+    animation: none;
+  }
+
+  .sheet {
+    opacity: 0.7;
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  .leafOne {
+    opacity: 0.7;
+    transform: translate(-0.2rem, 1rem) rotate(-8deg);
+  }
+
+  .leafTwo,
+  .leafThree {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .main {
+    flex-direction: column;
+    gap: 1.25rem;
+    width: min(calc(100% - 2rem), 32rem);
+    text-align: center;
+  }
+
+  .copy {
+    min-width: 0;
+  }
+
+  .animation {
+    width: 9rem;
+  }
+}

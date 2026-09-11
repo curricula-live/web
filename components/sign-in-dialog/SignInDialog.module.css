@@ -1,0 +1,76 @@
+.avatarButton {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: #eef1ed;
+  color: var(--color-accent);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.avatarButton:hover {
+  border-color: #b8c3bc;
+  background: #e7ece7;
+}
+
+.avatarIcon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.panel {
+  width: min(calc(100% - 2rem), 24rem);
+}
+
+.title {
+  margin: 0;
+  padding-right: 2rem;
+  font-family: var(--font-display);
+  font-size: 2.15rem;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 3rem;
+  margin-top: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: #7e8781;
+  cursor: not-allowed;
+  font-weight: 600;
+}
+
+.googleMark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid #cfd6d1;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status {
+  margin: var(--space-4) 0 0;
+  color: #8c958f;
+  font-size: 0.8rem;
+  text-align: center;
+}
