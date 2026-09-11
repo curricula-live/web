@@ -14,6 +14,8 @@ type SearchFiltersProps = {
 
 type FilterKind = "concepts" | "connections";
 
+const STUDENT_STAGES = ["Primary", "Lower secondary", "Upper secondary", "Adult"] as const;
+
 function searchHref(query: string, category: SearchCategory) {
   const params = new URLSearchParams({ q: query });
   if (category !== "all") {
@@ -42,6 +44,18 @@ function nextCategory(category: SearchCategory, toggled: FilterKind): SearchCate
   return next.concepts ? "concepts" : "connections";
 }
 
+function CheckMark({ checked }: { checked: boolean }) {
+  return (
+    <span className={`${styles.checkbox} ${checked ? styles.checked : ""}`} aria-hidden="true">
+      {checked ? (
+        <svg viewBox="0 0 16 16">
+          <path d="m3 8 3 3 7-7" />
+        </svg>
+      ) : null}
+    </span>
+  );
+}
+
 export function SearchFilters({ query, category }: SearchFiltersProps) {
   const [open, setOpen] = useState(false);
   const checked = checkedState(category);
@@ -68,31 +82,42 @@ export function SearchFilters({ query, category }: SearchFiltersProps) {
 
       {open ? (
         <div className={styles.tray} id="search-filter-tray">
-          <span className={styles.label}>Result type</span>
-          <div className={styles.options}>
-            {(["concepts", "connections"] as const).map((kind) => {
-              const isChecked = checked[kind];
-              const next = nextCategory(category, kind);
-              return (
-                <Link
-                  className={styles.option}
-                  href={searchHref(query, next)}
-                  key={kind}
-                  aria-current={isChecked ? "true" : undefined}
-                >
-                  <span className={`${styles.checkbox} ${isChecked ? styles.checked : ""}`}>
-                    {isChecked ? (
-                      <svg viewBox="0 0 16 16" aria-hidden="true">
-                        <path d="m3 8 3 3 7-7" />
-                      </svg>
-                    ) : null}
-                  </span>
-                  {kind === "concepts" ? "Concepts" : "Connections"}
-                </Link>
-              );
-            })}
+          <div className={styles.group}>
+            <span className={styles.label}>Result type</span>
+            <div className={styles.options}>
+              {(["concepts", "connections"] as const).map((kind) => {
+                const isChecked = checked[kind];
+                const next = nextCategory(category, kind);
+                return (
+                  <Link
+                    className={styles.option}
+                    href={searchHref(query, next)}
+                    key={kind}
+                    aria-current={isChecked ? "true" : undefined}
+                  >
+                    <CheckMark checked={isChecked} />
+                    {kind === "concepts" ? "Concepts" : "Connections"}
+                  </Link>
+                );
+              })}
+              <span className={styles.disabledOption} aria-disabled="true">
+                <CheckMark checked={false} />
+                Curriculum
+              </span>
+            </div>
           </div>
-          <span className={styles.note}>More filters will appear when real metadata exists.</span>
+
+          <div className={styles.group}>
+            <span className={styles.label}>Student stage</span>
+            <div className={styles.options}>
+              {STUDENT_STAGES.map((stage) => (
+                <span className={styles.disabledOption} aria-disabled="true" key={stage}>
+                  <CheckMark checked={false} />
+                  {stage}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       ) : null}
     </div>
