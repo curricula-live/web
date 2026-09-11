@@ -23,6 +23,8 @@ export function SearchForm() {
           type="search"
           placeholder="Search for a concept..."
           autoComplete="off"
+          pattern=".*\S.*"
+          title="Enter at least one non-space character"
           required
         />
         <button className={styles.submit} type="submit" aria-label="Search">
