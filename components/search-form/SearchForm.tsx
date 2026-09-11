@@ -9,7 +9,15 @@ const EXAMPLE_QUERIES = [
   "network protocol",
 ];
 
-export function SearchForm() {
+type SearchFormProps = {
+  defaultValue?: string;
+  showExamples?: boolean;
+};
+
+export function SearchForm({
+  defaultValue = "",
+  showExamples = true,
+}: SearchFormProps) {
   return (
     <div className={styles.wrapper}>
       <form className={styles.form} action="/search" method="get" role="search">
@@ -21,6 +29,7 @@ export function SearchForm() {
           className={styles.input}
           name="q"
           type="search"
+          defaultValue={defaultValue}
           placeholder="Search for a concept..."
           autoComplete="off"
           pattern=".*\S.*"
@@ -35,14 +44,16 @@ export function SearchForm() {
         </button>
       </form>
 
-      <div className={styles.examples} aria-label="Example searches">
-        <span>Try:</span>
-        {EXAMPLE_QUERIES.map((query) => (
-          <Link key={query} href={`/search?q=${encodeURIComponent(query)}`}>
-            {query}
-          </Link>
-        ))}
-      </div>
+      {showExamples ? (
+        <div className={styles.examples} aria-label="Example searches">
+          <span>Try:</span>
+          {EXAMPLE_QUERIES.map((query) => (
+            <Link key={query} href={`/search?q=${encodeURIComponent(query)}`}>
+              {query}
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
