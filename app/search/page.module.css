@@ -14,69 +14,10 @@
   width: min(100%, 46rem);
 }
 
-.categories {
-  display: flex;
-  gap: 1.6rem;
-  margin-top: var(--space-8);
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-
-.categories::-webkit-scrollbar {
-  display: none;
-}
-
-.category,
-.activeCategory,
-.disabledCategory {
-  position: relative;
-  flex: 0 0 auto;
-  padding: 0 0 0.85rem;
-  font-size: 0.9rem;
-}
-
-.category {
-  color: var(--color-text-muted);
-  transition: color var(--transition-fast);
-}
-
-.category:hover {
-  color: var(--color-text);
-}
-
-.activeCategory {
-  color: var(--color-accent);
-  font-weight: 650;
-}
-
-.activeCategory::after {
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
-  background: var(--color-accent);
-  content: "";
-}
-
-.disabledCategory {
-  color: #a1a8a4;
-  cursor: not-allowed;
-}
-
 .queryContext {
-  display: flex;
-  gap: 0.45rem;
   margin-top: var(--space-6);
   color: var(--color-text-muted);
   font-size: 0.85rem;
-}
-
-.queryContext strong {
-  color: var(--color-text);
-  font-weight: 600;
 }
 
 .groupedResults {
@@ -176,10 +117,6 @@
   .main {
     width: min(calc(100% - 2rem), 62rem);
     padding-top: 2.5rem;
-  }
-
-  .categories {
-    gap: 1.25rem;
   }
 
   .connectionRow {
