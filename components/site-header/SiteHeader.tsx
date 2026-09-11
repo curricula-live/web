@@ -12,12 +12,7 @@ export function SiteHeader() {
       </Link>
 
       <nav className={styles.navigation} aria-label="Primary navigation">
-        <button
-          className={styles.futureControl}
-          type="button"
-          disabled
-          aria-label="Teacher Planning — coming later"
-        >
+        <button className={styles.futureControl} type="button" disabled aria-label="Teacher Planning">
           Teacher Planning
         </button>
         <span className={styles.divider} aria-hidden="true" />
