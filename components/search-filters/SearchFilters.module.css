@@ -1,5 +1,5 @@
 .wrapper {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .triggerRow {
@@ -41,14 +41,24 @@
 }
 
 .tray {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4) var(--space-6);
+  display: grid;
+  gap: 0;
   margin-top: var(--space-3);
-  padding: 0.95rem 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
+}
+
+.group {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0.75rem 0;
+}
+
+.group + .group {
+  border-top: 1px solid var(--color-border);
 }
 
 .label {
@@ -60,30 +70,45 @@
 .options {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: 0.65rem 1.4rem;
 }
 
-.option {
+.option,
+.disabledOption {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-text);
+  min-height: 1.75rem;
   font-size: 0.85rem;
+}
+
+.option {
+  color: var(--color-text);
+}
+
+.option:hover {
+  color: var(--color-accent);
+}
+
+.disabledOption {
+  color: #a1a8a4;
+  cursor: default;
 }
 
 .checkbox {
   display: grid;
   place-items: center;
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
   border: 1px solid #aeb8b2;
   border-radius: 2px;
   background: var(--color-surface);
 }
 
 .checkbox svg {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 0.78rem;
+  height: 0.78rem;
   fill: none;
   stroke: white;
   stroke-linecap: round;
@@ -96,19 +121,19 @@
   background: var(--color-accent);
 }
 
-.note {
-  margin-left: auto;
-  color: #8e9791;
-  font-size: 0.76rem;
+.disabledOption .checkbox {
+  border-color: #d7dcd8;
+  background: #f3f4f1;
 }
 
 @media (max-width: 44rem) {
-  .tray {
-    align-items: flex-start;
+  .group {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: 0.9rem 0;
   }
 
-  .note {
-    flex-basis: 100%;
-    margin-left: 0;
+  .options {
+    gap: 0.6rem 1rem;
   }
 }
