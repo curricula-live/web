@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SearchFilters } from "@/components/search-filters/SearchFilters";
 import { SearchForm } from "@/components/search-form/SearchForm";
 import { SiteFooter } from "@/components/site-footer/SiteFooter";
 import { SiteHeader } from "@/components/site-header/SiteHeader";
@@ -21,26 +22,12 @@ type SearchPageProps = {
   }>;
 };
 
-const CATEGORY_OPTIONS: Array<{ label: string; value: SearchCategory }> = [
-  { label: "All", value: "all" },
-  { label: "Concepts", value: "concepts" },
-  { label: "Connections", value: "connections" },
-];
-
 function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
 function parseCategory(value: string | undefined): SearchCategory {
   return value === "concepts" || value === "connections" ? value : "all";
-}
-
-function searchHref(query: string, category: SearchCategory) {
-  const params = new URLSearchParams({ q: query });
-  if (category !== "all") {
-    params.set("category", category);
-  }
-  return `/search?${params.toString()}`;
 }
 
 function ConceptResults({ concepts }: { concepts: Array<{ slug: string }> }) {
@@ -93,6 +80,41 @@ function ConnectionResults({ connections }: { connections: RelationSummary[] }) 
   );
 }
 
+function ResultCount({
+  category,
+  concepts,
+  connections,
+  query,
+}: {
+  category: SearchCategory;
+  concepts: number;
+  connections: number;
+  query: string;
+}) {
+  if (category === "concepts") {
+    return (
+      <span>
+        Showing {concepts} concept {concepts === 1 ? "match" : "matches"} for “{query}”
+      </span>
+    );
+  }
+
+  if (category === "connections") {
+    return (
+      <span>
+        Showing {connections} connection {connections === 1 ? "match" : "matches"} for “{query}”
+      </span>
+    );
+  }
+
+  return (
+    <span>
+      Showing {concepts} concept {concepts === 1 ? "match" : "matches"} and {connections}{" "}
+      connection {connections === 1 ? "match" : "matches"} for “{query}”
+    </span>
+  );
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = firstValue(params.q)?.trim() ?? "";
@@ -125,29 +147,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {query ? (
           <>
-            <nav className={styles.categories} aria-label="Search result categories">
-              {CATEGORY_OPTIONS.map((option) => (
-                <Link
-                  className={option.value === category ? styles.activeCategory : styles.category}
-                  href={searchHref(query, option.value)}
-                  key={option.value}
-                >
-                  {option.label}
-                </Link>
-              ))}
-              <span
-                className={styles.disabledCategory}
-                aria-label="Curriculum search is not available yet"
-                title="Curriculum mappings are not available yet"
-              >
-                Curriculum
-              </span>
-            </nav>
+            <SearchFilters query={query} category={category} />
 
-            <div className={styles.queryContext}>
-              <span>Results for</span>
-              <strong>{query}</strong>
-            </div>
+            {!unavailable ? (
+              <div className={styles.queryContext}>
+                <ResultCount
+                  category={category}
+                  concepts={concepts.length}
+                  connections={connections.length}
+                  query={query}
+                />
+              </div>
+            ) : null}
 
             {unavailable ? (
               <section className={styles.notice}>

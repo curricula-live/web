@@ -5,13 +5,26 @@
   width: min(calc(100% - 4rem), var(--content-max));
   margin: 0 auto;
   padding: var(--space-6) 0 var(--space-8);
-  color: #8d9691;
+}
+
+.linkButton {
+  border: 0;
+  background: transparent;
+  color: #7f8983;
+  padding: 0;
+  cursor: pointer;
   font-size: 0.8rem;
+  transition: color var(--transition-fast);
+}
+
+.linkButton:hover {
+  color: var(--color-text);
 }
 
 @media (max-width: 44rem) {
   .footer {
     width: min(calc(100% - 2rem), var(--content-max));
+    justify-content: center;
     padding-bottom: var(--space-6);
   }
 }

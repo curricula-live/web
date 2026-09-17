@@ -12,7 +12,7 @@ export default function HomePage() {
       <main className={styles.main}>
         <section className={styles.hero} aria-labelledby="home-title">
           <h1 id="home-title">Search knowledge.</h1>
-          <p className={styles.subtitle}>For teachers: find concepts, build lessons.</p>
+          <p className={styles.subtitle}>Review concepts, plan lessons.</p>
           <SearchForm />
         </section>
       </main>
