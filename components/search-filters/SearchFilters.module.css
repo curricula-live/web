@@ -1,0 +1,139 @@
+.wrapper {
+  margin-top: var(--space-4);
+}
+
+.triggerRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #f1f4ef;
+  color: var(--color-text);
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.trigger:hover {
+  border-color: #bfc8c2;
+  background: #edf1ec;
+}
+
+.trigger svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.tray {
+  display: grid;
+  gap: 0;
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.group {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0.75rem 0;
+}
+
+.group + .group {
+  border-top: 1px solid var(--color-border);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.4rem;
+}
+
+.option,
+.disabledOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  font-size: 0.85rem;
+}
+
+.option {
+  color: var(--color-text);
+}
+
+.option:hover {
+  color: var(--color-accent);
+}
+
+.disabledOption {
+  color: #a1a8a4;
+  cursor: default;
+}
+
+.checkbox {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  border: 1px solid #aeb8b2;
+  border-radius: 2px;
+  background: var(--color-surface);
+}
+
+.checkbox svg {
+  width: 0.78rem;
+  height: 0.78rem;
+  fill: none;
+  stroke: white;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.disabledOption .checkbox {
+  border-color: #d7dcd8;
+  background: #f3f4f1;
+}
+
+@media (max-width: 44rem) {
+  .group {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: 0.9rem 0;
+  }
+
+  .options {
+    gap: 0.6rem 1rem;
+  }
+}
