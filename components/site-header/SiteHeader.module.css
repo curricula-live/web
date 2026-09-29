@@ -37,15 +37,19 @@
   white-space: nowrap;
 }
 
-.futureControl {
-  border: 0;
-  background: transparent;
+.planningLink {
+  border-bottom: 1px solid transparent;
   color: #58635d;
   padding: var(--space-2) 0;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
-.futureControl:disabled {
-  cursor: not-allowed;
+.planningLink:hover,
+.planningLink:focus-visible {
+  border-color: currentColor;
+  color: var(--color-accent);
 }
 
 .divider {
