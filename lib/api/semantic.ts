@@ -121,7 +121,7 @@ async function semanticJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function validateSemanticPlan(input: ValidatePlanInput) {
-  return semanticJson<ValidatePlanResponse>("/api/v1/plans/validate", {
+  return semanticJson<ValidatePlanResponse>("/v1/plans/validate/", {
     method: "POST",
     body: JSON.stringify({
       ...input,
