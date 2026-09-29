@@ -112,7 +112,7 @@ Set the server-side semantic service URL before running validation:
 SEMANTIC_API_BASE_URL=http://127.0.0.1:8001
 ```
 
-The configured service must implement `semantic-api@1`, including `POST /api/v1/plans/validate`. The route does not fall back to `API_BASE_URL`: the current graph API and the snapshot-aware semantic contract have different guarantees, and treating them as interchangeable would hide that distinction.
+The configured service must implement `semantic-api@1`, including `POST /v1/plans/validate/`. The product-backend implementation is being introduced in `curricula-live/api#42`. The route does not fall back to `API_BASE_URL` while the backend change remains unmerged: deployments must opt into a service/version that is known to expose the snapshot-aware contract rather than silently treating the legacy graph surface as equivalent.
 
 Without `SEMANTIC_API_BASE_URL`, the planning page still renders, but submitted validation requests fail explicitly as unconfigured rather than fabricating a result.
 
