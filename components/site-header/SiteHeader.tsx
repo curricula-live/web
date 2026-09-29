@@ -22,14 +22,9 @@ export function SiteHeader() {
       </Link>
 
       <nav className={styles.navigation} aria-label="Primary navigation">
-        <button
-          className={styles.futureControl}
-          type="button"
-          disabled
-          aria-label="Teacher Planning — coming later"
-        >
+        <Link className={styles.planningLink} href="/planning">
           Teacher Planning
-        </button>
+        </Link>
         <span className={styles.divider} aria-hidden="true" />
         <SignInDialog />
       </nav>

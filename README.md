@@ -102,6 +102,20 @@ The public Django API is deployed separately at `api.curricula.live` and exposes
 
 The frontend should access backend data through small typed functions rather than scattering raw `fetch` calls throughout React components.
 
+## Semantic planning prototype
+
+The `/planning` route is the first product consumer of the version-aware semantic publication contract. It is intentionally separate from the existing graph API client.
+
+Set the server-side semantic service URL before running validation:
+
+```dotenv
+SEMANTIC_API_BASE_URL=http://127.0.0.1:8001
+```
+
+The configured service must implement `semantic-api@1`, including `POST /v1/plans/validate/`. The product-backend implementation is being introduced in `curricula-live/api#42`. The route does not fall back to `API_BASE_URL` while the backend change remains unmerged: deployments must opt into a service/version that is known to expose the snapshot-aware contract rather than silently treating the legacy graph surface as equivalent.
+
+Without `SEMANTIC_API_BASE_URL`, the planning page still renders, but submitted validation requests fail explicitly as unconfigured rather than fabricating a result.
+
 ## Deployment
 
 The intended deployment model is Vercel with Git-connected preview deployments for feature branches and `dev`, while `main` represents production. The public `curricula.live` domain should only be moved after the new frontend has been reviewed on a preview deployment.

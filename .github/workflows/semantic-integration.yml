@@ -1,0 +1,135 @@
+name: Semantic cross-repository integration
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  planner-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out web branch
+        uses: actions/checkout@v4
+
+      - name: Check out semantic API branch
+        uses: actions/checkout@v4
+        with:
+          repository: curricula-live/api
+          ref: feat/semantic-publication-snapshots
+          path: api
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install API dependencies
+        working-directory: api
+        run: uv sync --frozen --dev
+
+      - name: Create integration database
+        working-directory: api
+        env:
+          DATABASE_URL: sqlite:///semantic-integration.sqlite3
+          DJANGO_SECRET_KEY: ci-semantic-integration-only
+          DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+        run: |
+          uv run python manage.py migrate --noinput
+          uv run python manage.py shell <<'PY'
+          import uuid
+          from django.db import connection
+          from core.models import Concept, Relation, RelationType
+          from core.semantic import publish_snapshot
+
+          with connection.schema_editor() as schema_editor:
+              for model in (Concept, RelationType, Relation):
+                  schema_editor.create_model(model)
+
+          concepts = {
+              slug: Concept.objects.create(slug=slug)
+              for slug in ("C1", "C2", "C3")
+          }
+          prerequisite = RelationType.objects.create(slug="prerequisite_of")
+
+          Relation.objects.create(
+              id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+              source=concepts["C1"],
+              type=prerequisite,
+              target=concepts["C2"],
+              metadata={"scope": {}, "evidence": ["EV-1"]},
+          )
+          Relation.objects.create(
+              id=uuid.UUID("00000000-0000-0000-0000-000000000002"),
+              source=concepts["C2"],
+              type=prerequisite,
+              target=concepts["C3"],
+              metadata={"scope": {}, "evidence": ["EV-2"]},
+          )
+
+          snapshot, created = publish_snapshot("K_17")
+          assert created
+          print(snapshot.snapshot_id, snapshot.content_hash)
+          PY
+
+      - name: Start semantic API
+        working-directory: api
+        env:
+          DATABASE_URL: sqlite:///semantic-integration.sqlite3
+          DJANGO_SECRET_KEY: ci-semantic-integration-only
+          DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+        run: |
+          uv run python manage.py runserver 127.0.0.1:8001 --noreload >/tmp/semantic-api.log 2>&1 &
+          echo $! > /tmp/semantic-api.pid
+          curl --retry 20 --retry-delay 1 --retry-connrefused --fail http://127.0.0.1:8001/health/
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install web dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build web consumer
+        env:
+          SEMANTIC_API_BASE_URL: http://127.0.0.1:8001
+        run: npm run build
+
+      - name: Start web consumer
+        env:
+          SEMANTIC_API_BASE_URL: http://127.0.0.1:8001
+          PORT: "3000"
+        run: |
+          npm start >/tmp/curricula-web.log 2>&1 &
+          echo $! > /tmp/curricula-web.pid
+          curl --retry 20 --retry-delay 1 --retry-connrefused --fail http://127.0.0.1:3000/
+
+      - name: Verify planner consumes published snapshot
+        run: |
+          curl --fail --silent --show-error             "http://127.0.0.1:3000/planning?run=1&snapshot=K_17&prior=C1&plan=C3%2CC2&course=number_representation"             > /tmp/planning.html
+
+          grep -q "INVALID" /tmp/planning.html
+          grep -q "K_17" /tmp/planning.html
+          grep -q "EV-2" /tmp/planning.html
+
+      - name: Print service logs on failure
+        if: failure()
+        run: |
+          echo "=== semantic API ==="
+          cat /tmp/semantic-api.log || true
+          echo "=== curricula web ==="
+          cat /tmp/curricula-web.log || true
