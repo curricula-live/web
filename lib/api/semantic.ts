@@ -90,13 +90,13 @@ function semanticBaseUrl() {
 }
 
 async function semanticJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  headers.set("Accept", "application/json");
+  headers.set("Content-Type", "application/json");
+
   const response = await fetch(`${semanticBaseUrl()}${path}`, {
     ...init,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers,
     cache: "no-store",
   });
 
