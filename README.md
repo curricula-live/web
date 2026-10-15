@@ -105,3 +105,14 @@ The frontend should access backend data through small typed functions rather tha
 ## Deployment
 
 The intended deployment model is Vercel with Git-connected preview deployments for feature branches and `dev`, while `main` represents production. The public `curricula.live` domain should only be moved after the new frontend has been reviewed on a preview deployment.
+
+## Scholarly Atlas
+
+`/atlas` navigates explicit children in versioned, reviewed source releases from
+`/v1/scholarly/`. Source switches appear only for published releases. The Atlas
+shows source provenance, document checksum, hierarchy locators, completeness and
+reviewed canonical links. Absent mappings and unavailable services have distinct
+states; no alphabetical or inferred hierarchy substitutes for a source import.
+Concept overview/curriculum sections load published definition and mapping
+evidence independently through a Suspense boundary. No source release is seeded
+or represented as available before the Data licensing and import review gates.

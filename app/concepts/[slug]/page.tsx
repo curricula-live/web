@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { ConceptEvidence } from "@/components/concept-evidence/ConceptEvidence";
 import { notFound } from "next/navigation";
 
 import { SiteFooter } from "@/components/site-footer/SiteFooter";
@@ -160,9 +162,9 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
         ) : view === "curriculum" ? (
           <section className={styles.state}>
             <p className={styles.sectionLabel}>Curriculum</p>
-            <h2>Curriculum mappings are not available yet.</h2>
+            <h2>Curriculum mappings</h2>
             <p>
-              This section is reserved for references showing where the concept is taught.
+              Reviewed source associations appear in the evidence section below.
             </p>
           </section>
         ) : view === "pedagogical" ? (
@@ -185,6 +187,9 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
             </div>
           </section>
         )}
+        {conceptExists && (view === "overview" || view === "curriculum") ? (
+          <Suspense fallback={<p>Loading scholarly evidence…</p>}><ConceptEvidence slug={slug} /></Suspense>
+        ) : null}
       </main>
       <SiteFooter />
     </div>
