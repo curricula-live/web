@@ -13,6 +13,8 @@ import {
 } from "@/lib/api/graph";
 import { humanizeSlug } from "@/lib/format";
 
+import { searchAtlas, type AtlasMatch } from "@/lib/ontology/search";
+
 import styles from "./page.module.css";
 
 type SearchPageProps = {
@@ -46,6 +48,28 @@ function ConceptResults({ concepts }: { concepts: Array<{ slug: string }> }) {
           <span className={styles.resultTitle}>{humanizeSlug(concept.slug)}</span>
           <span className={styles.slug}>{concept.slug}</span>
         </Link>
+      ))}
+    </div>
+  );
+}
+
+function AtlasResults({ concepts }: { concepts: AtlasMatch[] }) {
+  if (concepts.length === 0) return <p className={styles.empty}>No matching ontology concepts.</p>;
+
+  return (
+    <div className={styles.resultList}>
+      {concepts.map(concept => (
+        <a
+          className={styles.conceptResult}
+          href={`https://graph.curricula.live/?concept=${encodeURIComponent(concept.id)}`}
+          key={concept.id}
+        >
+          <span className={styles.resultTitle}>{concept.label}</span>
+          <span className={styles.slug}>
+            {concept.labelRo && concept.labelRo !== concept.label ? `${concept.labelRo} · ` : ""}
+            {concept.module} · {concept.kind}
+          </span>
+        </a>
       ))}
     </div>
   );
@@ -122,6 +146,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   let data: SearchResponse | null = null;
   let unavailable = false;
+  let atlasMatches: AtlasMatch[] = [];
+  let atlasUnavailable = false;
 
   if (query) {
     try {
@@ -131,6 +157,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       if (!(error instanceof GraphApiError)) {
         console.error("Unexpected search error", error);
       }
+    }
+  }
+
+  if (query && category !== "connections") {
+    try {
+      atlasMatches = await searchAtlas(query);
+    } catch (error) {
+      atlasUnavailable = true;
+      console.error("Ontology atlas search unavailable", error);
     }
   }
 
@@ -192,6 +227,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <section className={styles.notice}>
             <h1>Search knowledge.</h1>
             <p>Enter a concept or relationship above.</p>
+          </section>
+        )}
+        {query && category !== "connections" && (
+          <section className={styles.section} aria-labelledby="atlas-results-title">
+            <h2 id="atlas-results-title">Ontology atlas · V1</h2>
+            <p className={styles.empty}>
+              Provisional archived concepts, searchable in English, Romanian and aliases.
+              These entries are not yet peer-reviewed or necessarily mapped to the current API.
+            </p>
+            {atlasUnavailable
+              ? <p className={styles.empty}>Atlas search is temporarily unavailable.</p>
+              : <AtlasResults concepts={atlasMatches} />}
           </section>
         )}
       </main>
