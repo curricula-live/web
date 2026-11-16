@@ -240,7 +240,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
           truncated = true;
           continue;
         }
-        distances.set(neighbor, currentDepth + 1);
+        distances.set(neighbor, (distances.get(current) ?? 0) + 1);
         queue.push(neighbor);
       }
       if (!distances.has(row.source) || !distances.has(row.target)) {
