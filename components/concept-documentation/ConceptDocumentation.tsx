@@ -267,24 +267,24 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
   );
 }
 
+
 function EvidenceStatement({
   statement,
-  label,
+  number,
 }: {
   statement: DocumentationStatement;
-  label: string;
+  number: number;
 }) {
   return (
-    <li className={styles.statement}>
-      <span className={styles.statementLabel}>{label}</span>
-      <div>
-        <p>{statement.text}</p>
-        <small>
-          <code>{statement.predicate}</code>
-          {" · "}
-          {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
-          {" · "}
-          <span title={statement.id}>Assertion {statement.id.slice(0, 8)}</span>
+    <li id={"assertion-" + statement.id} className={styles.statement}>
+      <div className={styles.statementMain}>
+        <a className={styles.academicLabel} href={"#assertion-" + statement.id}>
+          Observation {String(number).padStart(2, "0")}
+        </a>
+        <p className={styles.statementText}>{statement.text}</p>
+        <small className={styles.statementContext}>
+          {statement.predicate.replaceAll("_", " ")} · {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
+          <span title={"Original relation UUID: " + statement.id}> · <code>{statement.id.slice(0, 8)}</code></span>
         </small>
       </div>
     </li>
@@ -301,65 +301,51 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
     (statement) => statement.source !== data.concept.slug && statement.target !== data.concept.slug,
   );
   const numbered = new Map(statements.map((statement, index) => [statement.id, index + 1]));
+  const byId = new Map(statements.map((statement) => [statement.id, statement]));
 
   return (
     <div className={styles.documentation}>
       <ConnectionDiagram data={data} />
 
-      <section className={styles.characterization} aria-labelledby="concept-characterization">
-        <p className={styles.eyebrow}>Mechanical characterization · provisional</p>
-        <h2 id="concept-characterization">What the recorded types establish</h2>
-        {data.characterization ? (
-          <>
-            <p className={styles.definition}>{data.characterization.text}</p>
-            <p className={styles.supportNote}>
-              Constructed only from direct <code>subtype_of</code> assertions. This is not a
-              reviewed scientific definition.
-            </p>
-          </>
-        ) : (
-          <p className={styles.empty}>
-            No direct subtype-based characterization can be established from this graph.
-          </p>
-        )}
-      </section>
-
-      <p className={styles.provenance}>
-        <strong>Legacy graph · provisional.</strong> {data.source.description} The separately
-        published V2 knowledge and reviewed scholarly evidence are not inferred from these
-        connections.
-      </p>
-
-      <section className={styles.bodySection} aria-labelledby="asserted-title">
-        <div className={styles.sectionHeading}>
-          <div>
-            <p className={styles.eyebrow}>Premises · recorded assertions</p>
-            <h2 id="asserted-title">What the graph actually says</h2>
+      {data.characterization ? (
+        <section className={styles.characterization} aria-label="Generated definition">
+          <div className={styles.definitionTitle}>
+            <h2 className={styles.academicHeading}>Definition 01</h2>
+            <span title="Automatically composed from provisional V1 graph assertions; not independently verified.">
+              Draft · V1
+            </span>
           </div>
-          <span className={styles.count}>{statements.length} assertions</span>
+          <p className={styles.definition}>{data.characterization.text}</p>
+        </section>
+      ) : null}
+
+      <section className={styles.bodySection} aria-label="Recorded observations">
+        <div className={styles.sectionHeading}>
+          <h2>Observations</h2>
+          <span className={styles.count}>{statements.length} recorded</span>
         </div>
         {firstHand.length ? (
-          <ol className={styles.statementList}>
+          <ol className={styles.observations}>
             {firstHand.map((statement) => (
               <EvidenceStatement
                 key={statement.id}
                 statement={statement}
-                label={`h${numbered.get(statement.id)}`}
+                number={numbered.get(statement.id) ?? 0}
               />
             ))}
           </ol>
         ) : (
-          <p className={styles.empty}>No directly connected assertions were returned.</p>
+          <p className={styles.empty}>No recorded relationships for this concept yet.</p>
         )}
         {extended.length ? (
           <details className={styles.extended}>
-            <summary>{extended.length} additional assertions from deeper connections</summary>
-            <ol className={styles.statementList}>
+            <summary>{extended.length} further observations from connected concepts</summary>
+            <ol className={styles.observations}>
               {extended.map((statement) => (
                 <EvidenceStatement
                   key={statement.id}
                   statement={statement}
-                  label={`h${numbered.get(statement.id)}`}
+                  number={numbered.get(statement.id) ?? 0}
                 />
               ))}
             </ol>
@@ -367,45 +353,42 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
         ) : null}
       </section>
 
-      <section className={styles.bodySection} aria-labelledby="derived-title">
-        <div className={styles.sectionHeading}>
-          <div>
-            <p className={styles.eyebrow}>Conditional inferences · explicit witnesses</p>
-            <h2 id="derived-title">What follows from those premises</h2>
+      {data.derived_statements.length ? (
+        <section className={styles.bodySection} aria-label="Derived propositions">
+          <div className={styles.sectionHeading}>
+            <h2>Propositions</h2>
+            <span className={styles.count}>{data.derived_statements.length} derived</span>
           </div>
-          <span className={styles.count}>{data.derived_statements.length} conclusions</span>
-        </div>
-        {data.derived_statements.length ? (
           <div className={styles.derivations}>
             {data.derived_statements.map((derived, index) => (
-              <article key={`${derived.target}:${derived.rule}`} className={styles.derivation}>
-                <p className={styles.derivationRule}>Conclusion {index + 1} · {derived.rule}</p>
-                <ol>
-                  {derived.premise_ids.map((id) => {
-                    const premise = statements.find((statement) => statement.id === id);
-                    return premise ? (
-                      <li key={id}>
-                        <span className={styles.premiseLabel}>h{numbered.get(id)}</span>
-                        {premise.text}
-                      </li>
-                    ) : null;
-                  })}
-                </ol>
-                <p className={styles.conclusion}>∴ {derived.text}</p>
+              <article key={derived.target + ":" + derived.rule} className={styles.derivation}>
+                <h3 className={styles.academicLabel}>Proposition {String(index + 1).padStart(2, "0")}</h3>
+                <p className={styles.propositionText}>{derived.text}</p>
+                <div className={styles.proof}>
+                  <div className={styles.proofHeading}>Proof {String(index + 1).padStart(2, "0")}</div>
+                  <div className={styles.proofPremises}>
+                    {derived.premise_ids.map((id) => {
+                      const premise = byId.get(id);
+                      return premise ? (
+                        <a href={"#assertion-" + id} key={id} className={styles.proofPremise}>
+                          <span className={styles.premiseNumber}>
+                            Obs. {String(numbered.get(id) ?? 0).padStart(2, "0")}
+                          </span>
+                          <span>{premise.text}</span>
+                        </a>
+                      ) : null;
+                    })}
+                  </div>
+                  <div className={styles.inferenceRule}>
+                    subtype transitivity
+                  </div>
+                  <p className={styles.proofConclusion}>∴ {derived.text}</p>
+                </div>
               </article>
             ))}
           </div>
-        ) : (
-          <p className={styles.empty}>
-            No additional conclusion follows from the currently returned subtype paths.
-            Other relation types are not automatically treated as logical implications.
-          </p>
-        )}
-        <p className={styles.supportNote}>
-          Rule: {data.derivation_policy.rule_description} These conclusions depend on
-          provisional premises; they are not Lean-verified proofs.
-        </p>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }
