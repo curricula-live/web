@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ConceptEvidence } from "@/components/concept-evidence/ConceptEvidence";
+import { ConceptDocumentationView } from "@/components/concept-documentation/ConceptDocumentation";
 import { notFound } from "next/navigation";
 
 import { SiteFooter } from "@/components/site-footer/SiteFooter";
@@ -8,8 +9,10 @@ import { SiteHeader } from "@/components/site-header/SiteHeader";
 import {
   getConcept,
   getConceptNeighborhood,
+  getConceptDocumentation,
   GraphApiError,
   type ConceptNeighborhood,
+  type ConceptDocumentation,
   type RelationSummary,
 } from "@/lib/api/graph";
 import { humanizeSlug } from "@/lib/format";
@@ -18,7 +21,7 @@ import styles from "./page.module.css";
 
 type ConceptPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string | string[] }>;
+  searchParams: Promise<{ view?: string | string[]; depth?: string | string[] }>;
 };
 
 type ConceptView = "overview" | "connections" | "curriculum" | "pedagogical";
@@ -84,7 +87,10 @@ function RelationGroup({
 
 export default async function ConceptPage({ params, searchParams }: ConceptPageProps) {
   const { slug } = await params;
-  const view = parseView((await searchParams).view);
+  const query = await searchParams;
+  const view = parseView(query.view);
+  const rawDepth = Array.isArray(query.depth) ? query.depth[0] : query.depth;
+  const depth = rawDepth === "1" || rawDepth === "3" ? Number(rawDepth) : 2;
 
   let conceptExists = false;
   let apiUnavailable = false;
@@ -109,6 +115,20 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
       neighborhoodUnavailable = true;
       if (!(error instanceof GraphApiError)) {
         console.error("Unexpected concept neighborhood error", error);
+      }
+    }
+  }
+
+  let documentation: ConceptDocumentation | null = null;
+  let documentationUnavailable = false;
+
+  if (conceptExists && view === "overview") {
+    try {
+      documentation = await getConceptDocumentation(slug, depth);
+    } catch (error) {
+      documentationUnavailable = true;
+      if (!(error instanceof GraphApiError)) {
+        console.error("Unexpected concept documentation error", error);
       }
     }
   }
@@ -180,11 +200,17 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
             <div className={styles.sectionIntro}>
               <p className={styles.sectionLabel}>Overview</p>
               <h2 id="overview-title">Structured documentation</h2>
-              <p>
-                Definitions, key points, examples and misconceptions have not been added for this
-                concept yet.
-              </p>
             </div>
+            {documentation ? (
+              <div className={styles.documentationContent}>
+                <ConceptDocumentationView data={documentation} />
+              </div>
+            ) : documentationUnavailable ? (
+              <p className={styles.muted}>
+                Graph-derived documentation is temporarily unavailable. Recorded facts are not
+                replaced with unverified text.
+              </p>
+            ) : null}
           </section>
         )}
         {conceptExists && (view === "overview" || view === "curriculum") ? (
