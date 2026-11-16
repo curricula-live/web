@@ -380,6 +380,11 @@ export async function getConceptDocumentation(slug: string, depth = 2) {
       `/v1/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
     );
   } catch (error) {
+    // Integration tests, development and eventual API-backed deployments can
+    // fail closed instead of silently returning to the slow, N-request bridge.
+    // The legacy bridge stays enabled for the isolated web Vercel preview
+    // until the paired development API is publicly routable.
+    if (process.env.CONCEPT_DOCUMENTATION_REQUIRE_API === "1") throw error;
     if (!(error instanceof GraphApiError && error.status === 404)) throw error;
     return legacyNeighborhoodDocumentation(slug, depth);
   }
