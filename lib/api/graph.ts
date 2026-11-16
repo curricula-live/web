@@ -125,6 +125,10 @@ export function searchGraph(query: string, category: SearchCategory = "all") {
   return getJson<SearchResponse>(`/v1/search/?${params.toString()}`);
 }
 
+export function getConceptDirectory() {
+  return getJson<{ results: ConceptSummary[] }>("/v1/concepts/");
+}
+
 export function getConcept(slug: string) {
   return getJson<ConceptDetail>(`/v1/concepts/${encodeURIComponent(slug)}/`);
 }
@@ -173,8 +177,8 @@ export function getConceptEvidence(slug: string) {
  * the documentation route. Nothing here imports archived V1 as reviewed V2.
  */
 async function legacyNeighborhoodDocumentation(slug: string, depth: number): Promise<ConceptDocumentation> {
-  const MAX_NODES = 26;
-  const MAX_EDGES = 48;
+  const MAX_NODES = 120;
+  const MAX_EDGES = 240;
   const distances = new Map<string, number>([[slug, 0]]);
   const queue: string[] = [slug];
   const seen = new Set<string>();
@@ -293,7 +297,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
         "this is not reviewed V2 scientific knowledge.",
     },
     traversal: {
-      depth, max_depth: 3, max_nodes: MAX_NODES, max_edges: MAX_EDGES, truncated,
+      depth, max_depth: 5, max_nodes: MAX_NODES, max_edges: MAX_EDGES, truncated,
     },
     graph: {
       nodes: [...distances].sort(
