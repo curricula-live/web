@@ -166,9 +166,168 @@ export function getConceptEvidence(slug: string) {
   return getJson<BoundedResults<ScholarlyEvidence>>(`/v1/concepts/${encodeURIComponent(slug)}/evidence/`);
 }
 
-export function getConceptDocumentation(slug: string, depth = 2) {
-  const params = new URLSearchParams({ depth: String(depth) });
-  return getJson<ConceptDocumentation>(
-    `/v1/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
+/**
+ * Temporary migration bridge for a frontend preview that still reads the
+ * production legacy /neighborhood/ endpoint. The canonical implementation
+ * lives in curricula-live/api; remove this bridge when both deployments share
+ * the documentation route. Nothing here imports archived V1 as reviewed V2.
+ */
+async function legacyNeighborhoodDocumentation(slug: string, depth: number): Promise<ConceptDocumentation> {
+  const MAX_NODES = 26;
+  const MAX_EDGES = 48;
+  const distances = new Map<string, number>([[slug, 0]]);
+  const queue: string[] = [slug];
+  const seen = new Set<string>();
+  const edges: DocumentationStatement[] = [];
+  let truncated = false;
+
+  const label = (value: string) =>
+    value.replaceAll("-", " ").replaceAll("_", " ").replace(/^./, (first) => first.toUpperCase());
+  const article = (value: string) => /^[aeiou]/i.test(value) ? "an" : "a";
+  const phrase = (source: string, predicate: string, target: string): string => {
+    const left = label(source);
+    const right = label(target).toLowerCase();
+    if (predicate === "subtype_of") return `${left} is ${article(right)} ${right}.`;
+    if (predicate === "part_of") return `${left} is part of ${right}.`;
+    if (predicate === "uses") return `${left} uses ${right}.`;
+    if (predicate === "prerequisite_of") return `${left} is a recorded prerequisite of ${right}.`;
+    return `${left} —${predicate}→ ${label(target)}.`;
+  };
+
+  for (let index = 0; index < queue.length; index++) {
+    const current = queue[index];
+    const currentDepth = distances.get(current) ?? 0;
+    if (currentDepth >= depth) continue;
+
+    const neighborhood = await getConceptNeighborhood(current);
+    const rows = [...neighborhood.outgoing, ...neighborhood.incoming].sort(
+      (a, b) => a.source.localeCompare(b.source)
+        || a.type.localeCompare(b.type)
+        || a.target.localeCompare(b.target)
+        || a.id.localeCompare(b.id),
+    );
+    if (rows.length > MAX_EDGES) truncated = true;
+    for (const row of rows.slice(0, MAX_EDGES + 1)) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      if (edges.length >= MAX_EDGES) {
+        truncated = true;
+        break;
+      }
+      const neighbor = row.source === current ? row.target : row.source;
+      if (!distances.has(neighbor)) {
+        if (distances.size >= MAX_NODES) {
+          truncated = true;
+          continue;
+        }
+        distances.set(neighbor, currentDepth + 1);
+        queue.push(neighbor);
+      }
+      if (!distances.has(row.source) || !distances.has(row.target)) {
+        truncated = true;
+        continue;
+      }
+      edges.push({
+        id: row.id,
+        source: row.source,
+        predicate: row.type,
+        target: row.target,
+        hop: Math.max(distances.get(row.source) ?? 0, distances.get(row.target) ?? 0),
+        status: "provisional_legacy_graph",
+        text: phrase(row.source, row.type, row.target),
+      });
+    }
+  }
+
+  edges.sort((a, b) =>
+    a.hop - b.hop || a.source.localeCompare(b.source)
+    || a.predicate.localeCompare(b.predicate) || a.target.localeCompare(b.target)
+    || a.id.localeCompare(b.id),
   );
+
+  const directTypes = edges.filter(
+    (edge) => edge.source === slug && edge.predicate === "subtype_of",
+  ).sort((a, b) => a.target.localeCompare(b.target));
+  const bySource = new Map<string, DocumentationStatement[]>();
+  for (const edge of edges.filter((e) => e.predicate === "subtype_of")) {
+    bySource.set(edge.source, [...(bySource.get(edge.source) ?? []), edge]);
+  }
+  for (const value of bySource.values()) {
+    value.sort((a, b) => a.target.localeCompare(b.target) || a.id.localeCompare(b.id));
+  }
+
+  const direct = new Set(directTypes.map((edge) => edge.target));
+  const visited = new Set([slug]);
+  const candidates: { node: string; path: string[]; nodes: string[] }[] =
+    [{ node: slug, path: [], nodes: [slug] }];
+  const derived: DocumentationDerivation[] = [];
+  for (let index = 0; index < candidates.length; index++) {
+    const current = candidates[index];
+    if (current.path.length >= depth) continue;
+    for (const edge of bySource.get(current.node) ?? []) {
+      if (visited.has(edge.target) || current.nodes.includes(edge.target)) continue;
+      visited.add(edge.target);
+      const path = [...current.path, edge.id];
+      candidates.push({ node: edge.target, path, nodes: [...current.nodes, edge.target] });
+      if (path.length > 1 && !direct.has(edge.target)) {
+        derived.push({
+          subject: slug, predicate: "subtype_of", target: edge.target,
+          text: phrase(slug, "subtype_of", edge.target),
+          rule: "subtype_of_transitivity", premise_ids: path,
+          status: "conditional_provisional_inference",
+        });
+      }
+    }
+  }
+
+  return {
+    contract_version: "legacy-concept-documentation@1",
+    concept: { slug, label: label(slug) },
+    source: {
+      kind: "legacy_concept_relation_tables",
+      status: "provisional_legacy_graph",
+      is_published_v2: false,
+      is_peer_reviewed: false,
+      description:
+        "Read-only compatibility projection of the existing public legacy neighborhood API; " +
+        "this is not reviewed V2 scientific knowledge.",
+    },
+    traversal: {
+      depth, max_depth: 3, max_nodes: MAX_NODES, max_edges: MAX_EDGES, truncated,
+    },
+    graph: {
+      nodes: [...distances].sort(
+        (a, b) => a[1] - b[1] || a[0].localeCompare(b[0]),
+      ).map(([name, hop]) => ({ slug: name, label: label(name), hop })),
+      edges,
+    },
+    characterization: directTypes.length ? {
+      text: directTypes.map((edge) => edge.text).join(" "),
+      assertion_ids: directTypes.map((edge) => edge.id),
+      status: "provisional_legacy_graph",
+      method: "direct_subtype_statements_only",
+    } : null,
+    asserted_statements: edges,
+    derived_statements: derived,
+    derivation_policy: {
+      implemented_rules: ["subtype_of_transitivity"],
+      rule_description: "If A subtype_of B and B subtype_of C, infer A subtype_of C.",
+      conditional_on_premises: true,
+      is_formal_proof_certificate: false,
+      uses_implies_prerequisite: false,
+      uses_implies_indexed_access: false,
+    },
+  };
+}
+
+export async function getConceptDocumentation(slug: string, depth = 2) {
+  const params = new URLSearchParams({ depth: String(depth) });
+  try {
+    return await getJson<ConceptDocumentation>(
+      `/v1/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
+    );
+  } catch (error) {
+    if (!(error instanceof GraphApiError && error.status === 404)) throw error;
+    return legacyNeighborhoodDocumentation(slug, depth);
+  }
 }
