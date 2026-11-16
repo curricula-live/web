@@ -382,3 +382,34 @@
     font-size: 0.64rem;
   }
 }
+
+/* Academic, compact concept documentation (V1 research view). */
+.definitionTitle { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .8rem; }
+.definitionTitle span { color: var(--color-text-muted); font-size: .73rem; }
+.academicHeading { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.3rem, 2vw, 1.75rem); margin: 0; }
+.academicLabel { display: inline-block; color: var(--color-accent); font-family: var(--font-display); font-size: .92rem; letter-spacing: .005em; font-weight: 650; text-decoration: none; }
+.academicLabel:hover { text-decoration: underline; text-underline-offset: .2rem; }
+.observations { padding: 0; list-style: none; margin: 1.2rem 0 0; display: grid; grid-template-columns: repeat(auto-fit,minmax(285px,1fr)); gap: .7rem; }
+.observations .statement { display: block; border: 1px solid var(--color-border); border-radius: .55rem; padding: .95rem 1rem; min-width: 0; }
+.statementMain { min-width: 0; }
+.statementText { font-family: var(--font-display); font-size: clamp(1rem,1.35vw,1.14rem); margin: .55rem 0 .8rem; line-height: 1.65; }
+.statementContext { color: var(--color-text-muted); font-size: .73rem; font-family: var(--font-mono,ui-monospace,monospace); overflow-wrap: anywhere; }
+.statementContext code { color: var(--color-text-muted); }
+.extended { margin-top: 1.1rem; }
+.extended summary { display: list-item; width: fit-content; color: var(--color-accent); padding: .3rem 0; font-size: .83rem; cursor: pointer; }
+.derivations { display: grid; grid-template-columns: repeat(auto-fit,minmax(340px,1fr)); gap: .8rem; margin-top: 1.2rem; }
+.derivation { border: 1px solid var(--color-border); padding: 1.25rem; border-radius: .65rem; }
+.derivation .academicLabel { margin: 0; }
+.propositionText { font-family: var(--font-display); font-size: 1.2rem; line-height: 1.6; margin: .7rem 0 1rem; }
+.proof { background: var(--color-canvas); padding: 1rem 1.05rem; border-radius: .45rem; border: 1px solid var(--color-border); }
+.proofHeading { color: var(--color-text-muted); font-size: .73rem; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .8rem; }
+.proofPremises { display: grid; gap: .55rem; }
+.proofPremise { color: var(--color-text); display: grid; grid-template-columns: 4rem minmax(0,1fr); align-items: baseline; gap: .45rem; font-size: .86rem; line-height: 1.55; text-decoration: none; }
+.proofPremise:hover span:last-child { text-decoration: underline; text-decoration-color: var(--color-accent); text-underline-offset: .2rem; }
+.premiseNumber { color: var(--color-accent); font-family: var(--font-mono,ui-monospace,monospace); font-size: .72rem; }
+.inferenceRule { border-top: 1.6px solid var(--color-accent); padding-top: .35rem; margin-top: .9rem; text-align: right; color: var(--color-text-muted); font-size: .69rem; font-family: var(--font-mono,ui-monospace,monospace); }
+.proofConclusion { font-family: var(--font-display); font-size: 1.04rem; line-height: 1.55; margin: .8rem 0 .05rem; }
+.inspector { border-top: 1px solid var(--color-border); padding-top: .8rem; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; font: .77rem var(--font-mono,ui-monospace,monospace); color: var(--color-text-muted); }
+.inspector .selectedPredicate { color: var(--color-accent); font-weight: 650; }
+.inspector .assertionId { margin-left: auto; opacity: .75; }
+@media (max-width: 48rem) { .observations,.derivations { grid-template-columns: 1fr; } .inspector .assertionId { margin-left: 0; } }
