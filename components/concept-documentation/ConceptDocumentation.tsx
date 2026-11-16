@@ -94,6 +94,62 @@ function splitNodeLabel(label: string) {
   return rows.slice(0, 3);
 }
 
+type LabelRect = { x1: number; y1: number; x2: number; y2: number };
+
+function overlappingArea(a: LabelRect, b: LabelRect) {
+  return Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1)) *
+    Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+}
+
+/** Prefer readable relation labels rather than fixed midpoints that overlap nodes. */
+function placeRelationLabels(
+  edges: DocumentationStatement[],
+  nodes: Map<string, PositionedNode>,
+  width: number,
+  height: number,
+) {
+  const placed: LabelRect[] = [];
+  const boxes: LabelRect[] = [...nodes.values()].map((node) => ({
+    x1: node.x - 102, y1: node.y - 32, x2: node.x + 102, y2: node.y + 32,
+  }));
+  const result = new Map<string, { x: number; y: number; width: number }>();
+  for (const edge of edges) {
+    const source = nodes.get(edge.source);
+    const target = nodes.get(edge.target);
+    if (!source || !target) continue;
+    const { start, end } = edgeEnds(source, target);
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.max(1, Math.hypot(dx, dy));
+    const labelWidth = Math.max(76, lineLabel(edge.predicate).length * 7.5 + 25);
+    let best: { cost: number; x: number; y: number; rect: LabelRect } | null = null;
+
+    for (const fraction of [0.5, 0.33, 0.68, 0.22, 0.8]) {
+      for (const offset of [14, -14, 40, -40, 70, -70, 105, -105, 145, -145]) {
+        const x = start.x + fraction * dx - dy / length * offset;
+        const y = start.y + fraction * dy + dx / length * offset;
+        const rect = {
+          x1: x - labelWidth / 2 - 4, y1: y - 16,
+          x2: x + labelWidth / 2 + 4, y2: y + 16,
+        };
+        const boundary =
+          Math.max(0, -rect.x1) + Math.max(0, rect.x2 - width) +
+          Math.max(0, -rect.y1) + Math.max(0, rect.y2 - height);
+        const cost = boundary * 200 +
+          boxes.reduce((total, box) => total + overlappingArea(rect, box) * 10, 0) +
+          placed.reduce((total, box) => total + overlappingArea(rect, box) * 12, 0) +
+          Math.abs(offset) * 0.04 + Math.abs(fraction - 0.5);
+        if (!best || cost < best.cost) best = { cost, x, y, rect };
+      }
+    }
+    if (best) {
+      placed.push(best.rect);
+      result.set(edge.id, { x: best.x, y: best.y, width: labelWidth });
+    }
+  }
+  return result;
+}
+
 function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
   const [scope, setScope] = useState<"key" | "all">("key");
   // Graph emphasis is visual only. Statement and proof lists remain complete.
@@ -119,10 +175,13 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
     };
   }, [data, scope]);
   const layout = useMemo(() => layoutGraph(displayed), [displayed]);
+  const labels = useMemo(() => placeRelationLabels(
+    displayed.graph.edges, layout.positioned, layout.width, layout.height,
+  ), [displayed, layout]);
   const rawId = useId();
   const markerId = `concept-arrow-${rawId.replaceAll(":", "")}`;
-  const [selectedId, setSelectedId] = useState<string | null>(data.graph.edges[0]?.id ?? null);
-  const selected = displayed.graph.edges.find((edge) => edge.id === selectedId) ?? displayed.graph.edges[0];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = displayed.graph.edges.find((edge) => edge.id === selectedId);
 
   return (
     <section className={styles.diagram} aria-labelledby="concept-map-title">
@@ -132,7 +191,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
           <h2 id="concept-map-title">Concept graph</h2>
         </div>
         <nav className={styles.depthNav} aria-label="Graph traversal depth">
-          {[1, 2, 3].map((depth) => (
+          {[1, 2, 3, 4, 5].map((depth) => (
             <Link
               key={depth}
               href={`/concepts/${encodeURIComponent(data.concept.slug)}?depth=${depth}`}
@@ -178,16 +237,17 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
               <path d="M0,0 L8,4 L0,8 Z" className={styles.arrowHead} />
             </marker>
           </defs>
-          {displayed.graph.edges.map((edge, index) => {
+          {displayed.graph.edges.map((edge) => {
             const source = layout.positioned.get(edge.source);
             const target = layout.positioned.get(edge.target);
             if (!source || !target) return null;
-            const { start, end, dx, dy } = edgeEnds(source, target);
-            const distance = Math.max(1, Math.hypot(dx, dy));
-            const labelX = (start.x + end.x) / 2 - (dy / distance) * (index % 2 ? -13 : 13);
-            const labelY = (start.y + end.y) / 2 + (dx / distance) * (index % 2 ? -13 : 13);
+            const { start, end } = edgeEnds(source, target);
             const predicate = lineLabel(edge.predicate);
-            const labelWidth = Math.min(150, Math.max(76, predicate.length * 7.4 + 18));
+            const placement = labels.get(edge.id);
+            if (!placement) return null;
+            const labelX = placement.x;
+            const labelY = placement.y;
+            const labelWidth = placement.width;
             return (
               <g
                 key={edge.id}
@@ -248,18 +308,15 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
       </div>
       {selected ? (
         <div className={styles.inspector} aria-live="polite">
-          <div>
-            <p className={styles.eyebrow}>Selected assertion · provisional</p>
-            <p className={styles.inspectorStatement}>{selected.text}</p>
-            <p className={styles.metadata}>
-              {selected.source} —{selected.predicate}→ {selected.target}
-            </p>
-          </div>
-          <code className={styles.assertionId} title={selected.id}>{selected.id}</code>
+          <span>{selected.source}</span>
+          <span className={styles.selectedPredicate}>{selected.predicate.replaceAll("_", " ")} →</span>
+          <span>{selected.target}</span>
+          <code className={styles.assertionId} title={"Source relation: " + selected.id}>{selected.id.slice(0, 8)}</code>
         </div>
-      ) : (
-        <p className={styles.empty}>No relationships were returned for this concept.</p>
-      )}
+      ) : null}
+      {!displayed.graph.edges.length ? (
+        <p className={styles.empty}>No recorded relationships for this concept.</p>
+      ) : null}
       {data.traversal.truncated ? (
         <p className={styles.truncated}>This view reached the graph size limit. Additional relationships may exist.</p>
       ) : null}
