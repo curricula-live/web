@@ -177,8 +177,10 @@ export function getConceptEvidence(slug: string) {
  * the documentation route. Nothing here imports archived V1 as reviewed V2.
  */
 async function legacyNeighborhoodDocumentation(slug: string, depth: number): Promise<ConceptDocumentation> {
-  const MAX_NODES = 120;
-  const MAX_EDGES = 240;
+  const MAX_NODES = 80;
+  const MAX_EDGES = 160;
+  const MAX_FETCHES = 48;
+  const CONCURRENCY = 8;
   const distances = new Map<string, number>([[slug, 0]]);
   const queue: string[] = [slug];
   const seen = new Set<string>();
@@ -198,20 +200,34 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
     return `${left} —${predicate}→ ${label(target)}.`;
   };
 
-  for (let index = 0; index < queue.length; index++) {
-    const current = queue[index];
-    const currentDepth = distances.get(current) ?? 0;
-    if (currentDepth >= depth) continue;
+  // Parallel batches replace the original one-request-per-neighbor waterfall.
+  // Keep a strict fetch budget: five-hop graphs must never trigger hundreds
+  // of requests against the public production neighborhood endpoint.
+  let expanded = 0;
+  for (let index = 0; index < queue.length;) {
+    const batch = queue.slice(index, index + CONCURRENCY);
+    index += batch.length;
+    const frontier = batch.filter((node) => (distances.get(node) ?? 0) < depth);
+    const available = Math.max(0, MAX_FETCHES - expanded);
+    if (frontier.length > available) truncated = true;
+    const eligible = frontier.slice(0, available);
+    if (!eligible.length) continue;
+    expanded += eligible.length;
 
-    const neighborhood = await getConceptNeighborhood(current);
-    const rows = [...neighborhood.outgoing, ...neighborhood.incoming].sort(
-      (a, b) => a.source.localeCompare(b.source)
-        || a.type.localeCompare(b.type)
-        || a.target.localeCompare(b.target)
-        || a.id.localeCompare(b.id),
-    );
-    if (rows.length > MAX_EDGES) truncated = true;
-    for (const row of rows.slice(0, MAX_EDGES + 1)) {
+    const neighborhoods = await Promise.all(eligible.map(async (node) => ({
+      node, neighborhood: await getConceptNeighborhood(node),
+    })));
+    for (const { node: current, neighborhood } of neighborhoods) {
+      const rank = (row: RelationSummary) =>
+        row.source === current && row.type === "subtype_of" ? 0 :
+        row.source === current ? 1 : row.type === "subtype_of" ? 2 : 3;
+      const rows = [...neighborhood.outgoing, ...neighborhood.incoming].sort(
+        (a, b) => rank(a) - rank(b) ||
+          a.source.localeCompare(b.source) || a.type.localeCompare(b.type) ||
+          a.target.localeCompare(b.target) || a.id.localeCompare(b.id),
+      );
+      if (rows.length > MAX_EDGES) truncated = true;
+      for (const row of rows.slice(0, MAX_EDGES + 1)) {
       if (seen.has(row.id)) continue;
       seen.add(row.id);
       if (edges.length >= MAX_EDGES) {
@@ -240,6 +256,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
         status: "provisional_legacy_graph",
         text: phrase(row.source, row.type, row.target),
       });
+      }
     }
   }
 
