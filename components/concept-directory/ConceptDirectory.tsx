@@ -18,13 +18,11 @@ export function ConceptDirectory({ slugs }: { slugs: string[] }) {
     return tally;
   }, [slugs]);
 
-  const filtered = useMemo(() => {
-    const term = query.trim().toLocaleLowerCase();
-    return slugs.filter((slug) => (
-      (initial === "All" || slug[0]?.toUpperCase() === initial) &&
-      (!term || slug.toLocaleLowerCase().includes(term) || humanizeSlug(slug).toLocaleLowerCase().includes(term))
-    ));
-  }, [slugs, query, initial]);
+  const term = query.trim().toLocaleLowerCase();
+  const filtered = slugs.filter((slug) => (
+    (initial === "All" || slug[0]?.toUpperCase() === initial) &&
+    (!term || slug.toLocaleLowerCase().includes(term) || humanizeSlug(slug).toLocaleLowerCase().includes(term))
+  ));
 
   return (
     <section className={styles.directory} aria-label="Concept directory">
