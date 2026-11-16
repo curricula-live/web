@@ -46,7 +46,7 @@ function layoutGraph(document: ConceptDocumentation) {
   const columnMin = sortedColumns[0] ?? 0;
   const longestColumn = Math.max(1, ...[...groups.values()].map((items) => items.length));
   const height = Math.max(430, longestColumn * 90 + 90);
-  const width = Math.max(780, sortedColumns.length * 245 + 80);
+  const width = Math.max(900, 150 + (sortedColumns.length - 1) * 340 + 135);
   const positioned = new Map<string, PositionedNode>();
 
   for (const column of sortedColumns) {
@@ -56,7 +56,7 @@ function layoutGraph(document: ConceptDocumentation) {
     nodes.forEach((node, index) => {
       positioned.set(node.slug, {
         ...node,
-        x: 135 + (column - columnMin) * 245,
+        x: 150 + (column - columnMin) * 340,
         y: (index + 1) * (height / (nodes.length + 1)),
       });
     });
@@ -112,7 +112,7 @@ function placeRelationLabels(
   const boxes: LabelRect[] = [...nodes.values()].map((node) => ({
     x1: node.x - 102, y1: node.y - 32, x2: node.x + 102, y2: node.y + 32,
   }));
-  const result = new Map<string, { x: number; y: number; width: number }>();
+  const result = new Map<string, { x: number; y: number; width: number; anchorX: number; anchorY: number }>();
   for (const edge of edges) {
     const source = nodes.get(edge.source);
     const target = nodes.get(edge.target);
@@ -122,10 +122,10 @@ function placeRelationLabels(
     const dy = end.y - start.y;
     const length = Math.max(1, Math.hypot(dx, dy));
     const labelWidth = Math.max(76, lineLabel(edge.predicate).length * 7.5 + 25);
-    let best: { cost: number; x: number; y: number; rect: LabelRect } | null = null;
+    let best: { cost: number; x: number; y: number; anchorX: number; anchorY: number; rect: LabelRect } | null = null;
 
     for (const fraction of [0.5, 0.33, 0.68, 0.22, 0.8]) {
-      for (const offset of [14, -14, 40, -40, 70, -70, 105, -105, 145, -145]) {
+      for (const offset of [12, -12, 28, -28, 48, -48, 72, -72]) {
         const x = start.x + fraction * dx - dy / length * offset;
         const y = start.y + fraction * dy + dx / length * offset;
         const rect = {
@@ -139,12 +139,12 @@ function placeRelationLabels(
           boxes.reduce((total, box) => total + overlappingArea(rect, box) * 10, 0) +
           placed.reduce((total, box) => total + overlappingArea(rect, box) * 12, 0) +
           Math.abs(offset) * 0.04 + Math.abs(fraction - 0.5);
-        if (!best || cost < best.cost) best = { cost, x, y, rect };
+        if (!best || cost < best.cost) best = { cost, x, y, anchorX: start.x + fraction * dx, anchorY: start.y + fraction * dy, rect };
       }
     }
     if (best) {
       placed.push(best.rect);
-      result.set(edge.id, { x: best.x, y: best.y, width: labelWidth });
+      result.set(edge.id, { x: best.x, y: best.y, width: labelWidth, anchorX: best.anchorX, anchorY: best.anchorY });
     }
   }
   return result;
@@ -269,6 +269,12 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
                   className={styles.edgeLine}
                   markerEnd={`url(#${markerId})`}
                 />
+                {Math.hypot(labelX - placement.anchorX, labelY - placement.anchorY) > 26 ? (
+                  <path
+                    d={"M" + placement.anchorX + " " + placement.anchorY + " L" + labelX + " " + labelY}
+                    className={styles.labelConnector}
+                  />
+                ) : null}
                 <rect
                   x={labelX - labelWidth / 2}
                   y={labelY - 12}
@@ -318,7 +324,11 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
         <p className={styles.empty}>No recorded relationships for this concept.</p>
       ) : null}
       {data.traversal.truncated ? (
-        <p className={styles.truncated}>This view reached the graph size limit. Additional relationships may exist.</p>
+        <p className={styles.truncated}>
+          Bounded graph preview: requested {data.traversal.depth} hops, reached
+          {" "}{Math.max(0, ...data.graph.nodes.map((node) => node.hop))} hops within the
+          node/edge budget. Select a connected concept to continue exploring from there.
+        </p>
       ) : null}
     </section>
   );
