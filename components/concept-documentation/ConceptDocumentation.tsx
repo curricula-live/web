@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GraphViewport } from "./GraphViewport";
 import { useId, useMemo, useState } from "react";
 import type { ConceptDocumentation, DocumentationStatement } from "@/lib/api/graph";
 import styles from "./ConceptDocumentation.module.css";
@@ -121,7 +122,8 @@ function placeRelationLabels(
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const length = Math.max(1, Math.hypot(dx, dy));
-    const labelWidth = Math.max(76, lineLabel(edge.predicate).length * 7.5 + 25);
+    const displayedPredicate = edge.predicate === "subtype_of" ? "⊆ · subtype of" : lineLabel(edge.predicate);
+    const labelWidth = Math.max(76, displayedPredicate.length * 7.5 + 25);
     let best: { cost: number; x: number; y: number; anchorX: number; anchorY: number; rect: LabelRect } | null = null;
 
     for (const fraction of [0.5, 0.33, 0.68, 0.22, 0.8]) {
@@ -181,6 +183,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
   const rawId = useId();
   const markerId = `concept-arrow-${rawId.replaceAll(":", "")}`;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pendingDepth, setPendingDepth] = useState<number | null>(null);
   const selected = displayed.graph.edges.find((edge) => edge.id === selectedId);
 
   return (
@@ -194,6 +197,8 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
           {[1, 2, 3, 4, 5].map((depth) => (
             <Link
               key={depth}
+              prefetch={false}
+              onClick={() => { if (depth !== data.traversal.depth) setPendingDepth(depth); }}
               href={`/concepts/${encodeURIComponent(data.concept.slug)}?depth=${depth}`}
               className={depth === data.traversal.depth ? styles.depthActive : styles.depthLink}
               aria-current={depth === data.traversal.depth ? "page" : undefined}
@@ -224,10 +229,19 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
         <span>{displayed.graph.edges.length} of {data.graph.edges.length} assertions shown</span>
       </div>
 
-      <div className={styles.graphScroll}>
+      {pendingDepth !== null && pendingDepth !== data.traversal.depth ? (
+        <div className={styles.depthLoading} role="status" aria-live="polite">
+          <span className={styles.loadingLeaf} aria-hidden="true">✳</span>
+          Retrieving {pendingDepth}-hop relationships and evidence…
+          <span className={styles.loadingTrack} aria-hidden="true"><span /></span>
+        </div>
+      ) : null}
+
+      <GraphViewport graphWidth={layout.width} graphHeight={layout.height}>
         <svg
           className={styles.graphSvg}
-          style={{ minWidth: layout.width }}
+          width={layout.width}
+          height={layout.height}
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           role="group"
           aria-label="Directed graph of recorded relationships. Select an arrow to inspect its statement."
@@ -242,7 +256,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
             const target = layout.positioned.get(edge.target);
             if (!source || !target) return null;
             const { start, end } = edgeEnds(source, target);
-            const predicate = lineLabel(edge.predicate);
+            const predicate = edge.predicate === "subtype_of" ? "⊆ · subtype of" : lineLabel(edge.predicate);
             const placement = labels.get(edge.id);
             if (!placement) return null;
             const labelX = placement.x;
@@ -311,11 +325,11 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
             );
           })}
         </svg>
-      </div>
+      </GraphViewport>
       {selected ? (
         <div className={styles.inspector} aria-live="polite">
           <span>{selected.source}</span>
-          <span className={styles.selectedPredicate}>{selected.predicate.replaceAll("_", " ")} →</span>
+          <span className={styles.selectedPredicate}>{selected.predicate === "subtype_of" ? "⊆ · subtype of" : selected.predicate.replaceAll("_", " ")} →</span>
           <span>{selected.target}</span>
           <code className={styles.assertionId} title={"Source relation: " + selected.id}>{selected.id.slice(0, 8)}</code>
         </div>
@@ -349,6 +363,9 @@ function EvidenceStatement({
           Observation {String(number).padStart(2, "0")}
         </a>
         <p className={styles.statementText}>{statement.text}</p>
+        {statement.predicate === "subtype_of" ? (
+          <p className={styles.symbolicStatement}>{statement.source.replaceAll("-", " ")} ⊆ {statement.target.replaceAll("-", " ")}</p>
+        ) : null}
         <small className={styles.statementContext}>
           {statement.predicate.replaceAll("_", " ")} · {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
           <span title={"Original relation UUID: " + statement.id}> · <code>{statement.id.slice(0, 8)}</code></span>
@@ -431,6 +448,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
               <article key={derived.target + ":" + derived.rule} className={styles.derivation}>
                 <h3 className={styles.academicLabel}>Proposition {String(index + 1).padStart(2, "0")}</h3>
                 <p className={styles.propositionText}>{derived.text}</p>
+                <p className={styles.symbolicProposition}>{derived.subject.replaceAll("-", " ")} ⊆ {derived.target.replaceAll("-", " ")}</p>
                 <div className={styles.proof}>
                   <div className={styles.proofHeading}>Proof {String(index + 1).padStart(2, "0")}</div>
                   <div className={styles.proofPremises}>
@@ -441,7 +459,9 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
                           <span className={styles.premiseNumber}>
                             Obs. {String(numbered.get(id) ?? 0).padStart(2, "0")}
                           </span>
-                          <span>{premise.text}</span>
+                          <span>{premise.predicate === "subtype_of"
+                            ? `${premise.source.replaceAll("-", " ")} ⊆ ${premise.target.replaceAll("-", " ")}`
+                            : premise.text}</span>
                         </a>
                       ) : null;
                     })}
@@ -449,7 +469,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
                   <div className={styles.inferenceRule}>
                     subtype transitivity
                   </div>
-                  <p className={styles.proofConclusion}>∴ {derived.text}</p>
+                  <p className={styles.proofConclusion}>∴ {derived.subject.replaceAll("-", " ")} ⊆ {derived.target.replaceAll("-", " ")}</p>
                 </div>
               </article>
             ))}
