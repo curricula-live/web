@@ -95,11 +95,34 @@ function splitNodeLabel(label: string) {
 }
 
 function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
-  const layout = useMemo(() => layoutGraph(data), [data]);
+  const [scope, setScope] = useState<"key" | "all">("key");
+  // Graph emphasis is visual only. Statement and proof lists remain complete.
+  const displayed = useMemo<ConceptDocumentation>(() => {
+    if (scope === "all") return data;
+    const center = data.concept.slug;
+    const directTypes = new Set(
+      data.graph.edges
+        .filter((edge) => edge.source === center && edge.predicate === "subtype_of")
+        .map((edge) => edge.target),
+    );
+    const edges = data.graph.edges.filter(
+      (edge) => edge.source === center || edge.target === center ||
+        (edge.predicate === "subtype_of" && directTypes.has(edge.source)),
+    );
+    const visible = new Set([center, ...edges.flatMap((edge) => [edge.source, edge.target])]);
+    return {
+      ...data,
+      graph: {
+        nodes: data.graph.nodes.filter((node) => visible.has(node.slug)),
+        edges,
+      },
+    };
+  }, [data, scope]);
+  const layout = useMemo(() => layoutGraph(displayed), [displayed]);
   const rawId = useId();
   const markerId = `concept-arrow-${rawId.replaceAll(":", "")}`;
   const [selectedId, setSelectedId] = useState<string | null>(data.graph.edges[0]?.id ?? null);
-  const selected = data.graph.edges.find((edge) => edge.id === selectedId) ?? data.graph.edges[0];
+  const selected = displayed.graph.edges.find((edge) => edge.id === selectedId) ?? displayed.graph.edges[0];
 
   return (
     <section className={styles.diagram} aria-labelledby="concept-map-title">
@@ -122,6 +145,26 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
         </nav>
       </div>
 
+      <div className={styles.scopeControls} role="group" aria-label="Graph relationships to display">
+        <button
+          type="button"
+          className={scope === "key" ? styles.scopeSelected : styles.scopeOption}
+          aria-pressed={scope === "key"}
+          onClick={() => setScope("key")}
+        >
+          Core relationships
+        </button>
+        <button
+          type="button"
+          className={scope === "all" ? styles.scopeSelected : styles.scopeOption}
+          aria-pressed={scope === "all"}
+          onClick={() => setScope("all")}
+        >
+          All recorded relationships
+        </button>
+        <span>{displayed.graph.edges.length} of {data.graph.edges.length} assertions shown</span>
+      </div>
+
       <div className={styles.graphScroll}>
         <svg
           className={styles.graphSvg}
@@ -135,7 +178,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
               <path d="M0,0 L8,4 L0,8 Z" className={styles.arrowHead} />
             </marker>
           </defs>
-          {data.graph.edges.map((edge, index) => {
+          {displayed.graph.edges.map((edge, index) => {
             const source = layout.positioned.get(edge.source);
             const target = layout.positioned.get(edge.target);
             if (!source || !target) return null;
