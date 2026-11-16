@@ -143,6 +143,15 @@
   stroke-width: 2.8;
 }
 
+.labelConnector {
+  stroke: var(--color-text-muted);
+  stroke-width: .9;
+  stroke-dasharray: 2 3;
+  opacity: .55;
+  fill: none;
+  pointer-events: none;
+}
+
 .predicateBackground {
   fill: var(--color-surface, #fff);
   stroke: var(--color-border);
