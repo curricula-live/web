@@ -90,7 +90,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
   const query = await searchParams;
   const view = parseView(query.view);
   const rawDepth = Array.isArray(query.depth) ? query.depth[0] : query.depth;
-  const depth = rawDepth === "1" || rawDepth === "3" ? Number(rawDepth) : 2;
+  const depth = rawDepth && /^[1-5]$/.test(rawDepth) ? Number(rawDepth) : 2;
 
   let conceptExists = false;
   let apiUnavailable = false;
@@ -140,7 +140,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
         <header className={styles.conceptHeader}>
           <p className={styles.kind}>Concept</p>
           <h1>{humanizeSlug(slug)}</h1>
-          <p className={styles.canonical}>{slug}</p>
+          <p className={styles.canonical}>{slug} · <Link href="/concepts">Browse all concepts</Link></p>
         </header>
 
         <nav className={styles.views} aria-label="Concept sections">
@@ -213,7 +213,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
             ) : null}
           </section>
         )}
-        {conceptExists && (view === "overview" || view === "curriculum") ? (
+        {conceptExists && view === "curriculum" ? (
           <Suspense fallback={<p>Loading scholarly evidence…</p>}><ConceptEvidence slug={slug} /></Suspense>
         ) : null}
       </main>
