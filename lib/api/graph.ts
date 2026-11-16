@@ -34,6 +34,65 @@ export type ConceptNeighborhood = {
   incoming: RelationSummary[];
 };
 
+export type DocumentationStatement = {
+  id: string;
+  source: string;
+  predicate: string;
+  target: string;
+  text: string;
+  hop: number;
+  status: "provisional_legacy_graph";
+};
+
+export type DocumentationDerivation = {
+  subject: string;
+  predicate: "subtype_of";
+  target: string;
+  text: string;
+  rule: "subtype_of_transitivity";
+  premise_ids: string[];
+  status: "conditional_provisional_inference";
+};
+
+export type ConceptDocumentation = {
+  contract_version: "legacy-concept-documentation@1";
+  concept: { slug: string; label: string };
+  source: {
+    kind: "legacy_concept_relation_tables";
+    status: "provisional_legacy_graph";
+    is_published_v2: false;
+    is_peer_reviewed: false;
+    description: string;
+  };
+  traversal: {
+    depth: number;
+    max_depth: number;
+    max_nodes: number;
+    max_edges: number;
+    truncated: boolean;
+  };
+  graph: {
+    nodes: { slug: string; label: string; hop: number }[];
+    edges: DocumentationStatement[];
+  };
+  characterization: {
+    text: string;
+    assertion_ids: string[];
+    status: "provisional_legacy_graph";
+    method: "direct_subtype_statements_only";
+  } | null;
+  asserted_statements: DocumentationStatement[];
+  derived_statements: DocumentationDerivation[];
+  derivation_policy: {
+    implemented_rules: string[];
+    rule_description: string;
+    conditional_on_premises: true;
+    is_formal_proof_certificate: false;
+    uses_implies_prerequisite: false;
+    uses_implies_indexed_access: false;
+  };
+};
+
 export class GraphApiError extends Error {
   status: number;
 
@@ -105,4 +164,11 @@ export function getScholarlyNodes(source: string, version: string, parent = "", 
 }
 export function getConceptEvidence(slug: string) {
   return getJson<BoundedResults<ScholarlyEvidence>>(`/v1/concepts/${encodeURIComponent(slug)}/evidence/`);
+}
+
+export function getConceptDocumentation(slug: string, depth = 2) {
+  const params = new URLSearchParams({ depth: String(depth) });
+  return getJson<ConceptDocumentation>(
+    `/v1/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
+  );
 }
