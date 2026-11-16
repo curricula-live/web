@@ -422,3 +422,44 @@
 .inspector .selectedPredicate { color: var(--color-accent); font-weight: 650; }
 .inspector .assertionId { margin-left: auto; opacity: .75; }
 @media (max-width: 48rem) { .observations,.derivations { grid-template-columns: 1fr; } .inspector .assertionId { margin-left: 0; } }
+
+/* Symbolic form supplements the exact recorded predicate. */
+.symbolicStatement {
+  margin: -.3rem 0 .55rem;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: var(--color-accent);
+}
+.symbolicProposition {
+  margin: -.55rem 0 1.15rem;
+  color: var(--color-accent);
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.28rem;
+}
+.depthLoading {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex-wrap: wrap;
+  font-size: .75rem;
+  color: var(--color-accent);
+  padding: .65rem 0 .1rem;
+}
+.loadingLeaf { display: inline-block; animation: graphPulse 1.8s ease-in-out infinite; font-size: 1.2rem; }
+.loadingTrack { flex: 1; min-width: 85px; height: 2px; background: var(--color-border); overflow: hidden; }
+.loadingTrack span {
+  display: block;
+  width: 35%;
+  height: 100%;
+  background: var(--color-accent);
+  animation: graphIndeterminate 1.5s ease-in-out infinite;
+}
+@keyframes graphPulse { 50% { transform: rotate(40deg) scale(1.13); opacity: .45; } }
+@keyframes graphIndeterminate {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loadingLeaf, .loadingTrack span { animation: none; }
+}
