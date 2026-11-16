@@ -79,7 +79,7 @@ export type ConceptDocumentation = {
     text: string;
     assertion_ids: string[];
     status: "provisional_legacy_graph";
-    method: "direct_subtype_statements_only";
+    method: "direct_conjunctive_assertions";
   } | null;
   asserted_statements: DocumentationStatement[];
   derived_statements: DocumentationDerivation[];
@@ -284,6 +284,38 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
     }
   }
 
+  const subtypeNames = directTypes.slice(0, 4).map((edge) => {
+    const target = label(edge.target).toLowerCase();
+    return `${article(target)} ${target}`;
+  });
+  const description: string[] = [];
+  const supporting: string[] = directTypes.slice(0, 4).map((edge) => edge.id);
+  if (subtypeNames.length) {
+    const category = subtypeNames.length === 1
+      ? subtypeNames[0]
+      : `${subtypeNames.slice(0, -1).join(", ")} and ${subtypeNames.at(-1)}`;
+    description.push(`${label(slug)} is ${category}.`);
+    for (const [predicate, verb] of [
+      ["uses", "uses"], ["processes", "processes"],
+      ["produces", "produces"], ["represents", "represents"],
+    ]) {
+      const group = edges.filter((edge) =>
+        edge.source === slug && edge.predicate === predicate,
+      ).sort((a, b) => a.target.localeCompare(b.target)).slice(0, 2);
+      if (group.length) {
+        description.push(`It ${verb} ${group.map((edge) => label(edge.target).toLowerCase()).join(" and ")}.`);
+        supporting.push(...group.map((edge) => edge.id));
+      }
+    }
+    const parts = edges.filter((edge) =>
+      edge.target === slug && edge.predicate === "part_of",
+    ).sort((a, b) => a.source.localeCompare(b.source)).slice(0, 2);
+    for (const part of parts) {
+      description.push(part.text);
+      supporting.push(part.id);
+    }
+  }
+
   return {
     contract_version: "legacy-concept-documentation@1",
     concept: { slug, label: label(slug) },
@@ -305,11 +337,11 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
       ).map(([name, hop]) => ({ slug: name, label: label(name), hop })),
       edges,
     },
-    characterization: directTypes.length ? {
-      text: directTypes.map((edge) => edge.text).join(" "),
-      assertion_ids: directTypes.map((edge) => edge.id),
+    characterization: subtypeNames.length ? {
+      text: description.join(" "),
+      assertion_ids: supporting,
       status: "provisional_legacy_graph",
-      method: "direct_subtype_statements_only",
+      method: "direct_conjunctive_assertions",
     } : null,
     asserted_statements: edges,
     derived_statements: derived,
