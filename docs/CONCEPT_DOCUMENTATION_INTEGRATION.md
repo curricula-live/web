@@ -35,8 +35,8 @@ Check out matching feature branches in `api` and `web`, plus a checkout of `data
 ```bash
 cd api
 python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install pytest pytest-django
+.venv/bin/pip install "django>=5.2,<5.3" "django-environ>=0.14" "psycopg[binary]>=3.1.8,<4" \
+  "pytest>=9.1.1" "pytest-django>=4.12.0"
 
 .venv/bin/python tests/tools/bootstrap_data_sqlite.py \
   --data-root ../data \
