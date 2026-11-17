@@ -1,3 +1,5 @@
+import { buildProvisionalSubtypeTrace } from "./proof-trace";
+
 const API_BASE_URL = (process.env.API_BASE_URL ?? "https://api.curricula.live").replace(
   /\/$/,
   "",
@@ -44,6 +46,29 @@ export type DocumentationStatement = {
   status: "provisional_legacy_graph";
 };
 
+export type DocumentationProofStep = {
+  id: string;
+  kind: "recorded_premise" | "derived_step";
+  rule: "recorded_subtype" | "subtype_of_transitivity";
+  subject: string;
+  predicate: "subtype_of";
+  target: string;
+  assertion_id: string | null;
+  depends_on: string[];
+};
+
+export type DocumentationProof = {
+  format: "provisional-subtype-trace@1";
+  scope: "provisional_legacy_graph";
+  scope_origin: "assumed_not_in_source";
+  rule_application_checked: true;
+  source_semantics_verified: false;
+  is_formal_proof_certificate: false;
+  may_publish: false;
+  conclusion_step_id: string;
+  steps: DocumentationProofStep[];
+};
+
 export type DocumentationDerivation = {
   subject: string;
   predicate: "subtype_of";
@@ -51,6 +76,7 @@ export type DocumentationDerivation = {
   text: string;
   rule: "subtype_of_transitivity";
   premise_ids: string[];
+  proof: DocumentationProof;
   status: "conditional_provisional_inference";
 };
 
@@ -295,6 +321,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
           subject: slug, predicate: "subtype_of", target: edge.target,
           text: phrase(slug, "subtype_of", edge.target),
           rule: "subtype_of_transitivity", premise_ids: path,
+          proof: buildProvisionalSubtypeTrace(slug, edge.target, path, edges),
           status: "conditional_provisional_inference",
         });
       }

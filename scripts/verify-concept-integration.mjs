@@ -53,6 +53,35 @@ for (const inference of document.derived_statements) {
     current = premise.target;
   }
   assert.equal(current, inference.target);
+  const proof = inference.proof;
+  assert(proof, "API inference must include typed proof steps");
+  assert.equal(proof.format, "provisional-subtype-trace@1");
+  assert.equal(proof.scope, "provisional_legacy_graph");
+  assert.equal(proof.scope_origin, "assumed_not_in_source");
+  assert.equal(proof.source_semantics_verified, false);
+  assert.equal(proof.is_formal_proof_certificate, false);
+  assert.equal(proof.may_publish, false);
+  assert.equal(proof.rule_application_checked, true);
+  assert.equal(proof.steps.length, inference.premise_ids.length * 2 - 1);
+  const byStep = new Map(proof.steps.map((step) => [step.id, step]));
+  for (let i = 0; i < inference.premise_ids.length; i++) {
+    const hypothesis = byStep.get(`h${i + 1}`);
+    const original = direct.get(inference.premise_ids[i]);
+    assert.equal(hypothesis?.kind, "recorded_premise");
+    assert.equal(hypothesis?.assertion_id, original.id);
+    assert.equal(hypothesis?.subject, original.source);
+    assert.equal(hypothesis?.target, original.target);
+  }
+  for (let i = 1; i < inference.premise_ids.length; i++) {
+    const step = byStep.get(`s${i}`);
+    assert.equal(step?.kind, "derived_step");
+    assert.equal(step?.rule, "subtype_of_transitivity");
+    assert.deepEqual(step?.depends_on, [i === 1 ? "h1" : `s${i - 1}`, `h${i + 1}`]);
+    assert.equal(step?.assertion_id, null);
+    assert.equal(step?.subject, inference.subject);
+    assert.equal(step?.target, direct.get(inference.premise_ids[i]).target);
+  }
+  assert.equal(proof.conclusion_step_id, `s${inference.premise_ids.length - 1}`);
 }
 
 const fromWeb = await fetchText(
@@ -73,6 +102,12 @@ for (const directStatement of document.asserted_statements.filter(
 }
 if (document.derived_statements.length) {
   assert(fromWeb.text.includes("Proposition"), "Derived propositions not rendered");
+  const htmlWithoutReactComments = fromWeb.text.replace(/<!--.*?-->/g, "");
+  assert(htmlWithoutReactComments.includes("Proof 01"), "Ordered proof section missing");
+  assert(fromWeb.text.includes("h1"), "Hypothesis step identifier not rendered");
+  assert(fromWeb.text.includes("transitivity"), "Derivation rule missing from proof");
+  assert(fromWeb.text.includes("scientific scope not independently established"),
+    "Provisional source-scope disclosure missing");
 }
 
 console.log(JSON.stringify({

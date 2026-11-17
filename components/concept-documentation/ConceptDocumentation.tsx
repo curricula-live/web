@@ -385,7 +385,6 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
     (statement) => statement.source !== data.concept.slug && statement.target !== data.concept.slug,
   );
   const numbered = new Map(statements.map((statement, index) => [statement.id, index + 1]));
-  const byId = new Map(statements.map((statement) => [statement.id, statement]));
 
   return (
     <div className={styles.documentation}>
@@ -448,28 +447,43 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
               <article key={derived.target + ":" + derived.rule} className={styles.derivation}>
                 <h3 className={styles.academicLabel}>Proposition {String(index + 1).padStart(2, "0")}</h3>
                 <p className={styles.propositionText}>{derived.text}</p>
-                <p className={styles.symbolicProposition}>{derived.subject.replaceAll("-", " ")} ⊆ {derived.target.replaceAll("-", " ")}</p>
                 <div className={styles.proof}>
-                  <div className={styles.proofHeading}>Proof {String(index + 1).padStart(2, "0")}</div>
-                  <div className={styles.proofPremises}>
-                    {derived.premise_ids.map((id) => {
-                      const premise = byId.get(id);
-                      return premise ? (
-                        <a href={"#assertion-" + id} key={id} className={styles.proofPremise}>
-                          <span className={styles.premiseNumber}>
-                            Obs. {String(numbered.get(id) ?? 0).padStart(2, "0")}
+                  <div className={styles.proofHeading}>
+                    <span>Proof {String(index + 1).padStart(2, "0")}</span>
+                    <span>Conditional · recorded graph</span>
+                  </div>
+                  <div className={styles.proofTrace} aria-label={`Steps for proof ${index + 1}`}>
+                    {derived.proof.steps.map((step) => (
+                      <div
+                        key={step.id}
+                        className={step.id === derived.proof.conclusion_step_id
+                          ? `${styles.proofStep} ${styles.proofStepConclusion}`
+                          : styles.proofStep}
+                      >
+                        <span className={styles.proofStepId}>{step.id}</span>
+                        <span className={styles.proofStepStatement}>
+                          {step.subject.replaceAll("-", " ")} ⊑ {step.target.replaceAll("-", " ")}
+                        </span>
+                        {step.assertion_id ? (
+                          <a
+                            href={"#assertion-" + step.assertion_id}
+                            className={styles.proofStepEvidence}
+                            title={"Recorded source assertion UUID: " + step.assertion_id}
+                          >
+                            Obs. {String(numbered.get(step.assertion_id) ?? 0).padStart(2, "0")}
+                            <span> · {step.assertion_id.slice(0, 8)}</span>
+                          </a>
+                        ) : (
+                          <span className={styles.proofStepRule}>
+                            transitivity ({step.depends_on.join(", ")})
                           </span>
-                          <span>{premise.predicate === "subtype_of"
-                            ? `${premise.source.replaceAll("-", " ")} ⊆ ${premise.target.replaceAll("-", " ")}`
-                            : premise.text}</span>
-                        </a>
-                      ) : null;
-                    })}
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className={styles.inferenceRule}>
-                    subtype transitivity
-                  </div>
-                  <p className={styles.proofConclusion}>∴ {derived.subject.replaceAll("-", " ")} ⊆ {derived.target.replaceAll("-", " ")}</p>
+                  <p className={styles.proofScopeNote} title="The chain of recorded edges is checked, but the common subtype semantics are not established by the source.">
+                    <span aria-hidden="true">∴</span> Deduced under the recorded subtype assumptions; scientific scope not independently established.
+                  </p>
                 </div>
               </article>
             ))}

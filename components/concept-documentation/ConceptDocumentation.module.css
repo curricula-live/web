@@ -463,3 +463,78 @@
 @media (prefers-reduced-motion: reduce) {
   .loadingLeaf, .loadingTrack span { animation: none; }
 }
+
+/* Ordered, evidence-linked logical witnesses for provisional subtype paths. */
+.proofHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: .7rem;
+  flex-wrap: wrap;
+}
+.proofHeading span:last-child {
+  color: var(--color-text-muted);
+  font-weight: 450;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.proofTrace {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+.proofStep {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: .5rem .85rem;
+  padding: .65rem .15rem;
+  border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+}
+.proofStepId {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--color-accent);
+  font-size: .82rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.proofStepStatement {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(.98rem, 1.5vw, 1.15rem);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.proofStepEvidence,
+.proofStepRule {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: .69rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.proofStepEvidence {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: .2rem;
+}
+.proofStepConclusion {
+  border-top: 1.5px solid var(--color-accent);
+  border-bottom: 0;
+  margin-top: .35rem;
+  padding-top: .95rem;
+}
+.proofStepConclusion .proofStepStatement { font-weight: 650; }
+.proofScopeNote {
+  font-size: .72rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  margin: .7rem .15rem 0;
+}
+.proofScopeNote span {
+  font-family: var(--font-display, Georgia, serif);
+  color: var(--color-accent);
+  margin-right: .25rem;
+}
+@media (max-width: 42rem) {
+  .proofStep { grid-template-columns: 2.3rem minmax(0, 1fr); }
+  .proofStepEvidence, .proofStepRule { grid-column: 2; white-space: normal; }
+}

@@ -88,3 +88,38 @@ Visit `http://127.0.0.1:3040/concepts/array?depth=3`.
 - A coordinated development API deployment must make the new endpoint reachable to the Next.js server. Then set `CONCEPT_DOCUMENTATION_REQUIRE_API=1` for the dev web deployment, run the paired smoke tests, and remove the compatibility fallback after parity is established.
 - No merge to production or automatic source import is authorized by these tests.
 - Future graph representation compression, pagination or proof-aware streaming should be evaluated using real response-size and traversal benchmarks after the paired endpoint is deployed; avoid premature encodings that obscure original UUID evidence.
+
+## Academic proof traces on the teacher Overview
+
+The documentation endpoint returns a **checked, provisional rule trace** for
+each derived subtype relation. A response includes:
+
+- `premise_ids`: UUIDs of the actual ordered recorded relations;
+- `proof.steps`: numbered `h1`, `h2`, etc. hypotheses and compositional
+  `s1`, `s2`, etc. transitive deductions;
+- `depends_on`: the exact proof-step IDs used at each intermediate step;
+- `scope_origin: assumed_not_in_source`: scientific subtype meaning has
+  **not** been verified for the archived legacy graph;
+- `is_formal_proof_certificate: false`, `may_publish: false`: the teacher
+  display is a verified graph-path witness, **not** the separate
+  formal-model research certificate or an accepted canonical assertion.
+
+The proof path is validated in the API against its original directed
+`subtype_of` edges. The temporary web-only preview compatibility fallback
+produces the same trace shape when the new API endpoint is 404. The frontend
+renders it in academic order, with each hypothesis linking to the original
+Observation (and its source UUID), rather than repeating a large set of
+unstructured premise paragraphs. The conclusion is separated by an inference
+rule divider; multi-hop proofs expose intermediate derivation steps.
+
+**Screenshots from a real headless Chromium run against an isolated local
+API/web pairing (not screenshots of the deployed preview or production):**
+
+- [Complete Array page at three hops](previews/array-three-hop-page.png)
+- [Definitions, observations and derivations](previews/array-proof-detail.png)
+
+Only the existing API and web feature branches are altered here; the
+experimental certificate checker remains isolated in the separately
+reviewed [API formal PR #65](https://github.com/curricula-live/api/pull/65).
+No ontology source import, canonical data mutation, migration, scientific
+certification or release is implied.
