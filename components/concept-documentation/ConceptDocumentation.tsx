@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { GraphViewport } from "./GraphViewport";
-import { LogicalReasoning } from "./LogicalReasoning";
-import { conceptLogicalReasoning } from "@/lib/logic/checked-reasoning";
 import { useId, useMemo, useState } from "react";
 import type { ConceptDocumentation, DocumentationStatement } from "@/lib/api/graph";
 import { renderFormalExpression } from "@/lib/api/formal-notation";
@@ -396,7 +394,6 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
 
   return (
     <div className={styles.documentation}>
-      {conceptLogicalReasoning(data.concept.slug) ? <a href="#logical-reasoning" className={styles.logicLink}>Explore checked logical propositions ∧ ∨ ¬ ⇒ ⇔ ↓</a> : null}
       <ConnectionDiagram data={data} />
 
       <section className={styles.relationProfile} aria-label="Recorded relation profile">
@@ -559,7 +556,6 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
           </div>
         </section>
       ) : null}
-      <LogicalReasoning key={data.concept.slug} slug={data.concept.slug} />
     </div>
   );
 }
