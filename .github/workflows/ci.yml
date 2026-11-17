@@ -40,5 +40,8 @@ jobs:
       - name: Validate typed formal notation
         run: node --experimental-strip-types scripts/verify-formal-notation.mjs
 
+      - name: Independently verify logical schemas
+        run: node scripts/verify-logical-reasoning.mjs
+
       - name: Build
         run: npm run build

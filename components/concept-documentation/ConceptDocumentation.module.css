@@ -637,3 +637,5 @@
 @media (max-width: 35rem) {
   .profileMetrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
+
+.logicLink { color: #355c40; font-size: .86rem; text-underline-offset: 4px; align-self: flex-start; }
