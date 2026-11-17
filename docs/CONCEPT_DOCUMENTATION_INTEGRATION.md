@@ -123,3 +123,36 @@ experimental certificate checker remains isolated in the separately
 reviewed [API formal PR #65](https://github.com/curricula-live/api/pull/65).
 No ontology source import, canonical data mutation, migration, scientific
 certification or release is implied.
+
+## Class expressions and conditional logic on concept pages
+
+The teacher Overview now includes **typed, source-linked formal expressions**
+without equating any unreviewed scientific claims to established truth:
+
+- Two or more *direct* recorded superclasses can yield a **necessary**
+  class condition of the form `Array ⊑ (Collection ⊓ Data Structure)`.
+  This is an intersection of necessary conditions, **not** an equivalence
+  or a full definition. Its source assertion UUIDs are exposed and linked to
+  the original observations.
+- Each conditional, checked subtype-transitivity witness additionally
+  displays a propositional rule formula:
+  `(Array ⊑ Collection ∧ Collection ⊑ Data) ⇒ (Array ⊑ Data)`.
+  The underlying typed AST includes all original UUIDs and flags its source
+  scope as `assumed_not_in_source`; it is not a new recorded graph relation.
+- The generic client renderer distinguishes **class** operators
+  `⊑, ≡, ⊓, ⊔, ¬, ∃, ∀` from **propositional** operators
+  `∧, ∨, ¬, ⇒, ⇔`. Their syntax is tested in
+  `scripts/verify-formal-notation.mjs`, including unsupported-premise
+  rejection. Only the **supported subset** is generated from current data.
+  In particular, `⇔` or class equivalence `≡` are never inferred
+  from a one-directional subtype assertion; the current corpus lacks the
+  structured evidence and bidirectional proof basis for automatic admission.
+- Expressions are horizontally scrollable for longer proofs so their
+  operators and concept names are never cut off by page layout.
+
+Headless Chromium visual review:
+- [Array with class and propositional formulas](previews/array-formal-operators.png)
+- [Formal expression detail](previews/array-formal-detail.png)
+
+Neither the experimental formal-language PR, source admission status nor
+canonical data snapshot is automatically changed by this read-only projection.

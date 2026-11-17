@@ -1,4 +1,6 @@
 import { buildProvisionalSubtypeTrace } from "./proof-trace";
+import { recordedNecessaryConditions, recordedTransitivityFormula } from "./formal-notation";
+import type { FormalProjection } from "./formal-notation";
 
 const API_BASE_URL = (process.env.API_BASE_URL ?? "https://api.curricula.live").replace(
   /\/$/,
@@ -77,6 +79,7 @@ export type DocumentationDerivation = {
   rule: "subtype_of_transitivity";
   premise_ids: string[];
   proof: DocumentationProof;
+  formal_rule: FormalProjection;
   status: "conditional_provisional_inference";
 };
 
@@ -108,6 +111,7 @@ export type ConceptDocumentation = {
     method: "direct_conjunctive_assertions";
   } | null;
   asserted_statements: DocumentationStatement[];
+  class_conditions: FormalProjection | null;
   derived_statements: DocumentationDerivation[];
   derivation_policy: {
     implemented_rules: string[];
@@ -322,6 +326,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
           text: phrase(slug, "subtype_of", edge.target),
           rule: "subtype_of_transitivity", premise_ids: path,
           proof: buildProvisionalSubtypeTrace(slug, edge.target, path, edges),
+          formal_rule: recordedTransitivityFormula(slug, edge.target, path, edges),
           status: "conditional_provisional_inference",
         });
       }
@@ -388,6 +393,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
       method: "direct_conjunctive_assertions",
     } : null,
     asserted_statements: edges,
+    class_conditions: recordedNecessaryConditions(slug, edges),
     derived_statements: derived,
     derivation_policy: {
       implemented_rules: ["subtype_of_transitivity"],

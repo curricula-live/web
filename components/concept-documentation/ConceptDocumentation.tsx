@@ -4,6 +4,7 @@ import Link from "next/link";
 import { GraphViewport } from "./GraphViewport";
 import { useId, useMemo, useState } from "react";
 import type { ConceptDocumentation, DocumentationStatement } from "@/lib/api/graph";
+import { renderFormalExpression } from "@/lib/api/formal-notation";
 import styles from "./ConceptDocumentation.module.css";
 
 type PositionedNode = {
@@ -364,7 +365,7 @@ function EvidenceStatement({
         </a>
         <p className={styles.statementText}>{statement.text}</p>
         {statement.predicate === "subtype_of" ? (
-          <p className={styles.symbolicStatement}>{statement.source.replaceAll("-", " ")} ⊆ {statement.target.replaceAll("-", " ")}</p>
+          <p className={styles.symbolicStatement}>{statement.source.replaceAll("-", " ")} ⊑ {statement.target.replaceAll("-", " ")}</p>
         ) : null}
         <small className={styles.statementContext}>
           {statement.predicate.replaceAll("_", " ")} · {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
@@ -399,6 +400,25 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
             </span>
           </div>
           <p className={styles.definition}>{data.characterization.text}</p>
+          {data.class_conditions ? (
+            <div className={styles.formalClassCondition} aria-label="Recorded necessary class conditions">
+              <span className={styles.formalRuleLabel}>Necessary class conditions · recorded</span>
+              <div className={styles.formalExpression} role="math">
+                {renderFormalExpression(data.class_conditions.expression)}
+              </div>
+              <small>
+                Necessary, not equivalent (≡). Supported by{" "}
+                {data.class_conditions.assertion_ids.map((id, index) => (
+                  <span key={id}>
+                    {index ? ", " : ""}
+                    <a href={"#assertion-" + id}>
+                      Obs. {String(numbered.get(id) ?? 0).padStart(2, "0")}
+                    </a>
+                  </span>
+                ))}.
+              </small>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -447,6 +467,12 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
               <article key={derived.target + ":" + derived.rule} className={styles.derivation}>
                 <h3 className={styles.academicLabel}>Proposition {String(index + 1).padStart(2, "0")}</h3>
                 <p className={styles.propositionText}>{derived.text}</p>
+                <div className={styles.formalImplication} aria-label="Conditional formal inference">
+                  <span className={styles.formalRuleLabel}>Conditional implication</span>
+                  <div className={styles.formalExpression} role="math">
+                    {renderFormalExpression(derived.formal_rule.expression)}
+                  </div>
+                </div>
                 <div className={styles.proof}>
                   <div className={styles.proofHeading}>
                     <span>Proof {String(index + 1).padStart(2, "0")}</span>

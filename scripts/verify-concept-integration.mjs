@@ -40,6 +40,25 @@ assert.equal(document.source.is_published_v2, false);
 assert(Array.isArray(document.graph.nodes));
 assert(Array.isArray(document.graph.edges));
 const direct = new Map(document.asserted_statements.map((edge) => [edge.id, edge]));
+const directClassTypes = [...new Set(document.asserted_statements
+  .filter((edge) => edge.source === concept && edge.predicate === "subtype_of" && edge.target !== concept)
+  .map((edge) => edge.target))];
+if (directClassTypes.length >= 2) {
+  assert(document.class_conditions, "Missing necessary class conditions from direct facts");
+  assert.equal(document.class_conditions.kind, "necessary_class_condition");
+  assert.equal(document.class_conditions.expression.op, "subsumption");
+  assert.equal(document.class_conditions.expression.right.op, "intersection");
+  assert.equal(document.class_conditions.expression.left.slug, concept);
+  assert.equal(document.class_conditions.equivalence_established, false);
+  assert.equal(document.class_conditions.source_semantics_verified, false);
+  for (const id of document.class_conditions.assertion_ids) {
+    const edge = direct.get(id);
+    assert(edge && edge.source === concept && edge.predicate === "subtype_of",
+      "Class condition does not refer to a direct subtype record");
+  }
+} else {
+  assert.equal(document.class_conditions, null);
+}
 
 for (const inference of document.derived_statements) {
   assert.equal(inference.rule, "subtype_of_transitivity");
@@ -82,6 +101,15 @@ for (const inference of document.derived_statements) {
     assert.equal(step?.target, direct.get(inference.premise_ids[i]).target);
   }
   assert.equal(proof.conclusion_step_id, `s${inference.premise_ids.length - 1}`);
+  const formal = inference.formal_rule;
+  assert.equal(formal.kind, "conditional_rule_formula");
+  assert.equal(formal.expression.op, "implies");
+  assert.equal(formal.expression.left.op, "and");
+  assert.equal(formal.expression.right.op, "subsumption");
+  assert.equal(formal.expression.left.args.length, inference.premise_ids.length);
+  assert.deepEqual(formal.assertion_ids, inference.premise_ids);
+  assert.equal(formal.equivalence_established, false);
+  assert.equal(formal.source_semantics_verified, false);
 }
 
 const fromWeb = await fetchText(
@@ -89,9 +117,13 @@ const fromWeb = await fetchText(
 );
 assert(fromWeb.text.includes("Concept graph"), "Web page lacks its graph");
 assert(fromWeb.text.includes("Observations"), "Web page lacks the recorded facts");
-assert(fromWeb.text.includes("⊆"), "Web page lacks symbolic subtype notation");
+assert(fromWeb.text.includes("⊑"), "Web page lacks class-subsumption notation");
 assert(fromWeb.text.includes("Graph-derived documentation is temporarily unavailable") === false);
 assert(fromWeb.text.includes("Definition 01") === Boolean(document.characterization));
+if (document.class_conditions) {
+  assert(fromWeb.text.includes("⊓"), "Class intersection missing in rendered page");
+  assert(fromWeb.text.includes("Necessary class conditions"), "Necessary-conditions label missing");
+}
 for (const directStatement of document.asserted_statements.filter(
   (edge) => edge.source === concept || edge.target === concept,
 )) {
@@ -106,6 +138,9 @@ if (document.derived_statements.length) {
   assert(htmlWithoutReactComments.includes("Proof 01"), "Ordered proof section missing");
   assert(fromWeb.text.includes("h1"), "Hypothesis step identifier not rendered");
   assert(fromWeb.text.includes("transitivity"), "Derivation rule missing from proof");
+  assert(fromWeb.text.includes("Conditional implication"), "Formal conditional label missing");
+  assert(fromWeb.text.includes("⇒"), "Implication operator missing");
+  assert(fromWeb.text.includes("∧"), "Propositional conjunction operator missing");
   assert(fromWeb.text.includes("scientific scope not independently established"),
     "Provisional source-scope disclosure missing");
 }
