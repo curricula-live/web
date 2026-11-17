@@ -40,6 +40,27 @@ assert.equal(document.source.is_published_v2, false);
 assert(Array.isArray(document.graph.nodes));
 assert(Array.isArray(document.graph.edges));
 const direct = new Map(document.asserted_statements.map((edge) => [edge.id, edge]));
+const profile = document.relation_profile;
+assert(profile, "Relation profile missing");
+assert.equal(profile.scope, "retrieved_neighborhood_only");
+assert.equal(profile.source_status, "provisional_legacy_graph");
+assert.equal(profile.scientific_completeness_established, false);
+assert.equal(profile.retrieval_truncated, document.traversal.truncated);
+const incident = document.asserted_statements.filter(
+  (edge) => edge.source === concept || edge.target === concept,
+);
+assert.equal(profile.direct_recorded_relations, incident.length);
+assert.equal(profile.outgoing_recorded_relations,
+  incident.filter((edge) => edge.source === concept).length);
+assert.equal(profile.incoming_recorded_relations,
+  incident.filter((edge) => edge.target === concept).length);
+assert.equal(profile.conditional_subtype_inferences, document.derived_statements.length);
+for (const [predicate, counts] of Object.entries(profile.by_predicate)) {
+  assert.equal(counts.outgoing,
+    incident.filter((edge) => edge.source === concept && edge.predicate === predicate).length);
+  assert.equal(counts.incoming,
+    incident.filter((edge) => edge.target === concept && edge.predicate === predicate).length);
+}
 const directClassTypes = [...new Set(document.asserted_statements
   .filter((edge) => edge.source === concept && edge.predicate === "subtype_of" && edge.target !== concept)
   .map((edge) => edge.target))];
@@ -120,6 +141,14 @@ assert(fromWeb.text.includes("Observations"), "Web page lacks the recorded facts
 assert(fromWeb.text.includes("⊑"), "Web page lacks class-subsumption notation");
 assert(fromWeb.text.includes("Graph-derived documentation is temporarily unavailable") === false);
 assert(fromWeb.text.includes("Definition 01") === Boolean(document.characterization));
+assert(fromWeb.text.includes("Relation profile"), "Relation profile is missing");
+assert(fromWeb.text.includes("Direct recorded"), "Direct relation totals are missing");
+assert(fromWeb.text.includes("Outgoing"), "Outgoing relation totals are missing");
+assert(fromWeb.text.includes("Incoming"), "Incoming relation totals are missing");
+if (!document.characterization) {
+  assert(fromWeb.text.includes("No class characterization"),
+    "Missing-classification explanation is not displayed");
+}
 if (document.class_conditions) {
   assert(fromWeb.text.includes("⊓"), "Class intersection missing in rendered page");
   assert(fromWeb.text.includes("Necessary class conditions"), "Necessary-conditions label missing");

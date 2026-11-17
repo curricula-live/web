@@ -575,3 +575,65 @@
   color: var(--color-accent);
   scrollbar-width: thin;
 }
+
+/* Read-only diagnostics for richer concept cases (not scientific completeness). */
+.relationProfile {
+  border-block: 1px solid var(--color-border);
+  padding-block: 1.1rem 1.25rem;
+  display: grid;
+  gap: .85rem;
+  min-width: 0;
+}
+.relationProfile h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  color: var(--color-text);
+}
+.profileMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: .75rem;
+}
+.profileMetrics > div {
+  display: grid;
+  gap: .25rem;
+}
+.profileMetrics strong {
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.profileMetrics span {
+  font-size: .7rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+.profilePredicates {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+.profilePredicates > span {
+  border: 1px solid var(--color-border);
+  border-radius: .3rem;
+  padding: .26rem .48rem;
+  font-size: .69rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+.profilePredicates strong {
+  margin-left: .22rem;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.profileNote {
+  margin: 0;
+  font-size: .74rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+@media (max-width: 35rem) {
+  .profileMetrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}

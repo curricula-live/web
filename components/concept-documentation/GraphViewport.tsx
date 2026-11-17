@@ -12,10 +12,14 @@ const MAX_ZOOM = 3.2;
 export function GraphViewport({
   graphWidth,
   graphHeight,
+  focusX,
+  focusY,
   children,
 }: {
   graphWidth: number;
   graphHeight: number;
+  focusX?: number;
+  focusY?: number;
   children: ReactNode;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -50,14 +54,47 @@ export function GraphViewport({
     });
   }, [graphWidth, graphHeight, update]);
 
+  // Dense star graphs can contain dozens of one-hop inbound edges.
+  // Automatically fitting ALL nodes may reduce labels to unreadable sizes.
+  // Start on the selected concept instead when the full fit is too small;
+  // the Fit control remains available for the complete graph.
+  const focus = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || focusX === undefined || focusY === undefined) {
+      fit();
+      return;
+    }
+    const zoom = 0.9;
+    update({
+      zoom,
+      x: viewport.clientWidth / 2 - focusX * zoom,
+      y: viewport.clientHeight / 2 - focusY * zoom,
+    });
+  }, [focusX, focusY, fit, update]);
+
+  const initialize = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const fitZoom = Math.min(
+      1.35,
+      (viewport.clientWidth - 44) / graphWidth,
+      (viewport.clientHeight - 44) / graphHeight,
+    );
+    if (fitZoom < 0.58 && focusX !== undefined && focusY !== undefined) {
+      focus();
+    } else {
+      fit();
+    }
+  }, [fit, focus, focusX, focusY, graphHeight, graphWidth]);
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-    const observer = new ResizeObserver(fit);
+    const observer = new ResizeObserver(initialize);
     observer.observe(viewport);
-    fit();
+    initialize();
     return () => observer.disconnect();
-  }, [fit]);
+  }, [initialize]);
 
   const zoomAround = useCallback((factor: number, px: number, py: number) => {
     update((previous) => {
@@ -145,6 +182,7 @@ export function GraphViewport({
         <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => buttonZoom(1 / 1.3)}>−</button>
         <span className={styles.zoom}>{Math.round(view.zoom * 100)}%</span>
         <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => buttonZoom(1.3)}>+</button>
+        <button type="button" onClick={focus} title="Center the selected concept at a readable zoom">Focus</button>
         <button type="button" onClick={fit} title="Fit the whole graph">Fit</button>
       </div>
       <div

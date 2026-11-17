@@ -238,7 +238,12 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
         </div>
       ) : null}
 
-      <GraphViewport graphWidth={layout.width} graphHeight={layout.height}>
+      <GraphViewport
+        graphWidth={layout.width}
+        graphHeight={layout.height}
+        focusX={layout.positioned.get(data.concept.slug)?.x}
+        focusY={layout.positioned.get(data.concept.slug)?.y}
+      >
         <svg
           className={styles.graphSvg}
           width={layout.width}
@@ -390,6 +395,41 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
   return (
     <div className={styles.documentation}>
       <ConnectionDiagram data={data} />
+
+      <section className={styles.relationProfile} aria-label="Recorded relation profile">
+        <div className={styles.sectionHeading}>
+          <h2>Relation profile</h2>
+          <span className={styles.count}>Retrieved graph · provisional</span>
+        </div>
+        <div className={styles.profileMetrics}>
+          <div><strong>{data.relation_profile.direct_recorded_relations}</strong><span>Direct recorded</span></div>
+          <div><strong>{data.relation_profile.outgoing_recorded_relations}</strong><span>Outgoing</span></div>
+          <div><strong>{data.relation_profile.incoming_recorded_relations}</strong><span>Incoming</span></div>
+          <div><strong>{data.relation_profile.conditional_subtype_inferences}</strong><span>Conditional conclusions</span></div>
+        </div>
+        <div className={styles.profilePredicates} aria-label="Predicate types and counts">
+          {Object.entries(data.relation_profile.by_predicate)
+            .sort((a, b) =>
+              (b[1].outgoing + b[1].incoming) - (a[1].outgoing + a[1].incoming)
+              || a[0].localeCompare(b[0]))
+            .map(([predicate, counts]) => (
+              <span key={predicate} title={`${counts.outgoing} outgoing; ${counts.incoming} incoming`}>
+                {predicate.replaceAll("_", " ")} <strong>{counts.outgoing + counts.incoming}</strong>
+              </span>
+            ))}
+        </div>
+        {!data.characterization ? (
+          <p className={styles.profileNote}>
+            No class characterization can be assembled from recorded direct subtype assertions.
+            The observations below remain available individually.
+          </p>
+        ) : null}
+        {data.relation_profile.retrieval_truncated ? (
+          <p className={styles.profileNote}>
+            The retrieved neighborhood was truncated. These figures are not full graph totals.
+          </p>
+        ) : null}
+      </section>
 
       {data.characterization ? (
         <section className={styles.characterization} aria-label="Generated definition">

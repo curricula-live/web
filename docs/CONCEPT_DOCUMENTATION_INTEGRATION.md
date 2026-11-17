@@ -156,3 +156,46 @@ Headless Chromium visual review:
 
 Neither the experimental formal-language PR, source admission status nor
 canonical data snapshot is automatically changed by this read-only projection.
+
+
+## Live benchmark comparison: Algorithm and Computer Network
+
+The read-only teacher documentation API and the Next.js concept page were
+checked together using a **disposable SQLite mirror** of canonical Git
+`data` (554 concepts, 19 predicates, 663 recorded relationships). This is
+**not production**, and the historical native ontology was *not* imported.
+
+The new generic `relation_profile` response counts the subject's direct
+incoming/outgoing recorded edges by predicate, and the conditional subtype
+conclusions produced by the existing rule. Its scope is always
+`retrieved_neighborhood_only`; it reports truncation explicitly and **does
+not** claim scientific or full-ontology completeness. For examples with no
+recorded direct `subtype_of`, the page explains why no class characterization
+can be assembled rather than fabricating a definition.
+
+**Benchmarks from the current canonical snapshot:**
+
+| Concept | Depth | Retrieved nodes | Retrieved edges | Direct incidence | Conditional subtype derivations | Truncated? |
+|---|---:|---:|---:|---:|---:|---|
+| Algorithm | 2 | 53 | 55 | 18 (1 outgoing, 17 incoming) | 0 | No |
+| Computer Network | 3 | 46 | 47 | 4 (1 outgoing, 3 incoming) | 1 | No |
+| Function | 3 | 55 | 58 | 12 | 0 | No |
+| Operating System | 3 | 59 | 63 | 4 | 0 | No |
+
+Algorithm at 3 hops reaches the 120-node cap; it is an intentionally useful
+stress test for graph density and sparse classificatory evidence. The viewport
+now opens on the selected concept at readable zoom when a whole-graph fit
+would be too small (<58%), retaining **Focus**, pan/zoom and **Fit** controls.
+The graph does not suppress or silently alter the underlying assertion IDs.
+
+Visual screenshots from headless Chromium after API/React integration:
+
+- [Algorithm at two hops with focused zoom and relation profile](previews/algorithm-benchmark-2h.png)
+- [Computer Network at three hops with a conditional proof](previews/computer-network-benchmark-3h.png)
+
+You can inspect these same provisional previews at
+`/concepts/algorithm?depth=2` and
+`/concepts/computer-network?depth=3` on the paired development deployment.
+The screenshots were generated locally, not on production. No claim is made
+that the historical native structures are scientifically accepted or that
+`broader_topic` can be treated as `subtype_of`.

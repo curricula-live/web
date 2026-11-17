@@ -1,6 +1,8 @@
 import { buildProvisionalSubtypeTrace } from "./proof-trace";
 import { recordedNecessaryConditions, recordedTransitivityFormula } from "./formal-notation";
 import type { FormalProjection } from "./formal-notation";
+import { recordedRelationProfile } from "./relation-profile";
+import type { ConceptRelationProfile } from "./relation-profile";
 
 const API_BASE_URL = (process.env.API_BASE_URL ?? "https://api.curricula.live").replace(
   /\/$/,
@@ -113,6 +115,7 @@ export type ConceptDocumentation = {
   asserted_statements: DocumentationStatement[];
   class_conditions: FormalProjection | null;
   derived_statements: DocumentationDerivation[];
+  relation_profile: ConceptRelationProfile;
   derivation_policy: {
     implemented_rules: string[];
     rule_description: string;
@@ -395,6 +398,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
     asserted_statements: edges,
     class_conditions: recordedNecessaryConditions(slug, edges),
     derived_statements: derived,
+    relation_profile: recordedRelationProfile(slug, edges, derived, truncated),
     derivation_policy: {
       implemented_rules: ["subtype_of_transitivity"],
       rule_description: "If A subtype_of B and B subtype_of C, infer A subtype_of C.",
