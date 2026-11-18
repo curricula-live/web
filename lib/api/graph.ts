@@ -9,6 +9,9 @@ const API_BASE_URL = (process.env.API_BASE_URL ?? "https://api.curricula.live").
   "",
 );
 
+export const KNOWLEDGE_PREVIEW_ENABLED = process.env.KNOWLEDGE_PREVIEW_ENABLED === "true";
+const conceptPrefix = KNOWLEDGE_PREVIEW_ENABLED ? "/v2-preview/knowledge" : "/v1";
+
 export type SearchCategory = "all" | "concepts" | "connections";
 
 export type ConceptSummary = {
@@ -89,7 +92,7 @@ export type ConceptDocumentation = {
   contract_version: "legacy-concept-documentation@1";
   concept: { slug: string; label: string };
   source: {
-    kind: "legacy_concept_relation_tables";
+    kind: "legacy_concept_relation_tables" | "canonical_staging_statements";
     status: "provisional_legacy_graph";
     is_published_v2: false;
     is_peer_reviewed: false;
@@ -114,6 +117,7 @@ export type ConceptDocumentation = {
   } | null;
   asserted_statements: DocumentationStatement[];
   class_conditions: FormalProjection | null;
+  scoped_derivations?: { text: string; rule: string; premise_ids: string[]; rule_application_checked: boolean }[];
   derived_statements: DocumentationDerivation[];
   relation_profile: ConceptRelationProfile;
   derivation_policy: {
@@ -155,20 +159,20 @@ export function searchGraph(query: string, category: SearchCategory = "all") {
     category,
   });
 
-  return getJson<SearchResponse>(`/v1/search/?${params.toString()}`);
+  return getJson<SearchResponse>(`${conceptPrefix}/search/?${params.toString()}`);
 }
 
 export function getConceptDirectory() {
-  return getJson<{ results: ConceptSummary[] }>("/v1/concepts/");
+  return getJson<{ results: ConceptSummary[] }>(`${conceptPrefix}/concepts/`);
 }
 
 export function getConcept(slug: string) {
-  return getJson<ConceptDetail>(`/v1/concepts/${encodeURIComponent(slug)}/`);
+  return getJson<ConceptDetail>(`${conceptPrefix}/concepts/${encodeURIComponent(slug)}/`);
 }
 
 export function getConceptNeighborhood(slug: string) {
   return getJson<ConceptNeighborhood>(
-    `/v1/concepts/${encodeURIComponent(slug)}/neighborhood/`,
+    `${conceptPrefix}/concepts/${encodeURIComponent(slug)}/neighborhood/`,
   );
 }
 
@@ -414,14 +418,14 @@ export async function getConceptDocumentation(slug: string, depth = 2) {
   const params = new URLSearchParams({ depth: String(depth) });
   try {
     return await getJson<ConceptDocumentation>(
-      `/v1/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
+      `${conceptPrefix}/concepts/${encodeURIComponent(slug)}/documentation/?${params.toString()}`,
     );
   } catch (error) {
     // Integration tests, development and eventual API-backed deployments can
     // fail closed instead of silently returning to the slow, N-request bridge.
     // The legacy bridge stays enabled for the isolated web Vercel preview
     // until the paired development API is publicly routable.
-    if (process.env.CONCEPT_DOCUMENTATION_REQUIRE_API === "1") throw error;
+    if (KNOWLEDGE_PREVIEW_ENABLED || process.env.CONCEPT_DOCUMENTATION_REQUIRE_API === "1") throw error;
     if (!(error instanceof GraphApiError && error.status === 404)) throw error;
     return legacyNeighborhoodDocumentation(slug, depth);
   }

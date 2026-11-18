@@ -436,7 +436,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
           <div className={styles.definitionTitle}>
             <h2 className={styles.academicHeading}>Definition 01</h2>
             <span title="Automatically composed from provisional V1 graph assertions; not independently verified.">
-              Draft · V1
+              {data.source.kind === "legacy_concept_relation_tables" ? "Draft · V1" : "Draft · staging"}
             </span>
           </div>
           <p className={styles.definition}>{data.characterization.text}</p>
@@ -554,6 +554,21 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
               </article>
             ))}
           </div>
+        </section>
+      ) : null}
+      {data.scoped_derivations?.some(item => item.rule_application_checked) ? (
+        <section className={styles.bodySection} aria-label="Conclusions from recorded statements">
+          <h2>Conclusions from recorded statements</h2>
+          <ul>
+            {data.scoped_derivations.filter(item => item.rule_application_checked).map(item => (
+              <li key={item.rule + item.text + item.premise_ids.join(",")}>
+                <p>{item.text}</p>
+                <small>{item.rule.replaceAll("_", " ")} · {item.premise_ids.map(id => (
+                  <span key={id}><a href={"#assertion-" + id}>Obs. {numbered.get(id)}</a>{" "}</span>
+                ))}</small>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
     </div>
