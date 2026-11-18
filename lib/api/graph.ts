@@ -110,6 +110,8 @@ export type ConceptDocumentation = {
     edges: DocumentationStatement[];
   };
   characterization: {
+    clauses?: { text: string; direction: "incoming" | "outgoing"; predicate: string; basis: "recorded_assertions" | "conditional_inference"; assertion_ids: string[]; group_truncated: boolean; rule?: string }[];
+    retrieval_truncated?: boolean;
     text: string;
     assertion_ids: string[];
     status: "provisional_legacy_graph";

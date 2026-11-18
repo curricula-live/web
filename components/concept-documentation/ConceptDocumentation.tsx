@@ -435,14 +435,31 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
       </section>
 
       {data.characterization ? (
-        <section className={styles.characterization} aria-label="Generated definition">
+        <section className={styles.characterization} aria-label="Generated characterization">
           <div className={styles.definitionTitle}>
-            <h2 className={styles.academicHeading}>Definition 01</h2>
+            <h2 className={styles.academicHeading}>Characterization 01</h2>
             <span title="Automatically composed from recorded assertions; not independently verified.">
               {data.source.kind === "legacy_concept_relation_tables" ? "Draft · V1" : "Draft · staging"}
             </span>
           </div>
           <p className={styles.definition}>{data.characterization.text}</p>
+          {data.characterization.clauses?.length ? (
+            <details className={styles.extended}>
+              <summary>Evidence for each clause · {data.characterization.clauses.length} clauses</summary>
+              <ol className={styles.observations}>
+                {data.characterization.clauses.map((clause, index) => (
+                  <li key={index}>
+                    <p>{clause.text}</p>
+                    <small>{clause.basis === "conditional_inference" ? "Conditional inference" : clause.direction === "incoming" ? "Incoming relationship · inverse reading" : "Outgoing relationship"}{" · "}
+                      {clause.assertion_ids.map(id => <span key={id}><a href={"#assertion-" + id}>Obs. {numbered.get(id)}</a>{" "}</span>)}
+                      {clause.group_truncated ? " · Selected examples; further recorded relations omitted." : ""}
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          ) : null}
+          {data.characterization.retrieval_truncated ? <p className={styles.profileNote}>This characterization uses a bounded neighborhood; further recorded relationships may exist.</p> : null}
           {data.class_conditions ? (
             <div className={styles.formalClassCondition} aria-label="Recorded necessary class conditions">
               <span className={styles.formalRuleLabel}>Necessary class conditions · recorded</span>
