@@ -426,7 +426,7 @@ async function legacyNeighborhoodDocumentation(slug: string, depth: number): Pro
   };
 }
 
-export async function getConceptDocumentation(slug: string, depth = 2) {
+export async function getConceptDocumentation(slug: string, depth = 5) {
   const params = new URLSearchParams({ depth: String(depth) });
   try {
     return await getJson<ConceptDocumentation>(

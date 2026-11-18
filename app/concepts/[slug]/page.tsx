@@ -89,8 +89,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
   const { slug } = await params;
   const query = await searchParams;
   const view = parseView(query.view);
-  const rawDepth = Array.isArray(query.depth) ? query.depth[0] : query.depth;
-  const depth = rawDepth && /^[1-5]$/.test(rawDepth) ? Number(rawDepth) : 2;
+  const depth = 5;
 
   let conceptExists = false;
   let apiUnavailable = false;
@@ -196,11 +195,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
             </p>
           </section>
         ) : (
-          <section className={styles.content} aria-labelledby="overview-title">
-            <div className={styles.sectionIntro}>
-              <p className={styles.sectionLabel}>Overview</p>
-              <h2 id="overview-title">Structured documentation</h2>
-            </div>
+          <section className={styles.content} aria-label="Concept details">
             {documentation ? (
               <div className={styles.documentationContent}>
                 <ConceptDocumentationView data={documentation} />

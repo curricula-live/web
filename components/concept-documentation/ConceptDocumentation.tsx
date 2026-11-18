@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { renderRecordedLogic } from "./recorded-logic";
 import { GraphViewport } from "./GraphViewport";
 import { useId, useMemo, useState } from "react";
@@ -156,28 +155,21 @@ function placeRelationLabels(
 
 function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
   const [scope, setScope] = useState<"key" | "all">("key");
+  const [visualDepth, setVisualDepth] = useState(5);
   // Graph emphasis is visual only. Statement and proof lists remain complete.
   const displayed = useMemo<ConceptDocumentation>(() => {
-    if (scope === "all") return data;
     const center = data.concept.slug;
-    const directTypes = new Set(
-      data.graph.edges
-        .filter((edge) => edge.source === center && edge.predicate === "subtype_of")
-        .map((edge) => edge.target),
-    );
-    const edges = data.graph.edges.filter(
-      (edge) => edge.source === center || edge.target === center ||
-        (edge.predicate === "subtype_of" && directTypes.has(edge.source)),
-    );
-    const visible = new Set([center, ...edges.flatMap((edge) => [edge.source, edge.target])]);
-    return {
-      ...data,
-      graph: {
-        nodes: data.graph.nodes.filter((node) => visible.has(node.slug)),
-        edges,
-      },
-    };
-  }, [data, scope]);
+    const nodesAtDepth = data.graph.nodes.filter(n => n.hop <= visualDepth);
+    const allowed = new Set(nodesAtDepth.map(n => n.slug));
+    const depthEdges = data.graph.edges.filter(e => e.hop <= visualDepth && allowed.has(e.source) && allowed.has(e.target));
+    const directTypes = new Set(depthEdges.filter(e => e.source === center && e.predicate === "subtype_of").map(e => e.target));
+    const scopedEdges = scope === "all" ? depthEdges : depthEdges.filter(e =>
+      e.source === center || e.target === center || (e.predicate === "subtype_of" && directTypes.has(e.source)));
+    // Drawing has its own bound; this never changes evidence or deductions.
+    const edges = scopedEdges.slice(0, 240);
+    const visible = new Set([center, ...edges.flatMap(e => [e.source, e.target])]);
+    return {...data, graph: {nodes: nodesAtDepth.filter(n => visible.has(n.slug)), edges}};
+  }, [data, scope, visualDepth]);
   const layout = useMemo(() => layoutGraph(displayed), [displayed]);
   const labels = useMemo(() => placeRelationLabels(
     displayed.graph.edges, layout.positioned, layout.width, layout.height,
@@ -185,32 +177,10 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
   const rawId = useId();
   const markerId = `concept-arrow-${rawId.replaceAll(":", "")}`;
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [pendingDepth, setPendingDepth] = useState<number | null>(null);
   const selected = displayed.graph.edges.find((edge) => edge.id === selectedId);
 
   return (
-    <section className={styles.diagram} aria-labelledby="concept-map-title">
-      <div className={styles.diagramTop}>
-        <div>
-          <p className={styles.eyebrow}>Recorded knowledge · directed relations</p>
-          <h2 id="concept-map-title">Concept graph</h2>
-        </div>
-        <nav className={styles.depthNav} aria-label="Graph traversal depth">
-          {[1, 2, 3, 4, 5].map((depth) => (
-            <Link
-              key={depth}
-              prefetch={false}
-              onClick={() => { if (depth !== data.traversal.depth) setPendingDepth(depth); }}
-              href={`/concepts/${encodeURIComponent(data.concept.slug)}?depth=${depth}`}
-              className={depth === data.traversal.depth ? styles.depthActive : styles.depthLink}
-              aria-current={depth === data.traversal.depth ? "page" : undefined}
-            >
-              {depth} {depth === 1 ? "hop" : "hops"}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
+    <section className={styles.diagram} aria-label="Concept relationships">
       <div className={styles.scopeControls} role="group" aria-label="Graph relationships to display">
         <button
           type="button"
@@ -228,16 +198,11 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
         >
           All recorded relationships
         </button>
+        <label>Visible depth <select aria-label="Visible graph depth" value={visualDepth} onChange={event => setVisualDepth(Number(event.target.value))}>
+          {[1,2,3,4,5].map(depth => <option key={depth} value={depth}>{depth} {depth === 1 ? "hop" : "hops"}</option>)}
+        </select></label>
         <span>{displayed.graph.edges.length} of {data.graph.edges.length} assertions shown</span>
       </div>
-
-      {pendingDepth !== null && pendingDepth !== data.traversal.depth ? (
-        <div className={styles.depthLoading} role="status" aria-live="polite">
-          <span className={styles.loadingLeaf} aria-hidden="true">✳</span>
-          Retrieving {pendingDepth}-hop relationships and evidence…
-          <span className={styles.loadingTrack} aria-hidden="true"><span /></span>
-        </div>
-      ) : null}
 
       <GraphViewport
         graphWidth={layout.width}
@@ -346,9 +311,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
       ) : null}
       {data.traversal.truncated ? (
         <p className={styles.truncated}>
-          Bounded graph preview: requested {data.traversal.depth} hops, reached
-          {" "}{Math.max(0, ...data.graph.nodes.map((node) => node.hop))} hops within the
-          node/edge budget. Select a connected concept to continue exploring from there.
+          Reasoning uses a bounded five-hop retrieval. Graph controls only change the drawing; some neighborhood context may be omitted.
         </p>
       ) : null}
     </section>
@@ -445,7 +408,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
           <p className={styles.definition}>{data.characterization.text}</p>
           {data.characterization.clauses?.length ? (
             <details className={styles.extended}>
-              <summary>Evidence for each clause · {data.characterization.clauses.length} clauses</summary>
+              <summary>Evidence for each clause · {data.characterization.clauses.length} {data.characterization.clauses.length === 1 ? "clause" : "clauses"}</summary>
               <ol className={styles.observations}>
                 {data.characterization.clauses.map((clause, index) => (
                   <li key={index}>
