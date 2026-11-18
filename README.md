@@ -96,6 +96,14 @@ styles/               shared design tokens
 
 Feature-specific component and data-access directories should be added only when the corresponding functionality exists.
 
+## Concept documentation integration (experimental)
+
+The teacher-facing concept Overview can display a directed, labeled knowledge diagram, mechanical subtype characterization, recorded assertions and conditional subtype derivations. It consumes the paired API route `/v1/concepts/<slug>/documentation/?depth=1|2|3`.
+
+Until that route is available on the configured API deployment, the frontend has a **temporary read-only compatibility fallback** to the existing legacy `/neighborhood/` endpoint. It uses bounded traversal and the same exact subtype-transitivity rule; it never transforms `uses` into an indexed-access or prerequisite claim. Remove the fallback once both deployments are promoted together.
+
+**Provenance boundary:** The current concept/relation tables are provisional legacy knowledge, not independently reviewed source federation V2. Graph-derived statements must not appear as certified definitions; reviewed scholarly evidence remains displayed separately. No educational lesson prose is generated in this feature.
+
 ## Backend
 
 The public Django API is deployed separately at `api.curricula.live` and exposes its stable contract under `/v1/`.
