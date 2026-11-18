@@ -141,8 +141,18 @@ export class GraphApiError extends Error {
 }
 
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: "application/json" },
+  const preview = path.startsWith("/v2-preview/knowledge/");
+  const previewBase = process.env.KNOWLEDGE_PREVIEW_API_URL;
+  const previewSecret = process.env.KNOWLEDGE_PREVIEW_API_SECRET;
+  if (preview && (!previewBase || !previewSecret)) {
+    throw new GraphApiError("Knowledge preview connection is unavailable", 503);
+  }
+  const base = preview ? previewBase!.replace(/\/$/, "") : API_BASE_URL;
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (preview && previewSecret) headers["x-vercel-protection-bypass"] = previewSecret;
+  const response = await fetch(`${base}${path}`, {
+    headers,
+    redirect: preview ? "error" : "follow",
     cache: "no-store",
   });
 
