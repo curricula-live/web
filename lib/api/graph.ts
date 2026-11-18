@@ -106,7 +106,7 @@ export type ConceptDocumentation = {
     truncated: boolean;
   };
   graph: {
-    nodes: { slug: string; label: string; hop: number }[];
+    nodes: { id?: string; slug: string; label: string; hop: number }[];
     edges: DocumentationStatement[];
   };
   characterization: {
@@ -117,7 +117,7 @@ export type ConceptDocumentation = {
   } | null;
   asserted_statements: DocumentationStatement[];
   class_conditions: FormalProjection | null;
-  scoped_derivations?: { text: string; rule: string; premise_ids: string[]; rule_application_checked: boolean }[];
+  scoped_derivations?: { expression?: import("@/components/concept-documentation/recorded-logic").RecordedLogic; text: string; rule: string; premise_ids: string[]; rule_application_checked: boolean }[];
   derived_statements: DocumentationDerivation[];
   relation_profile: ConceptRelationProfile;
   derivation_policy: {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { renderRecordedLogic } from "./recorded-logic";
 import { GraphViewport } from "./GraphViewport";
 import { useId, useMemo, useState } from "react";
 import type { ConceptDocumentation, DocumentationStatement } from "@/lib/api/graph";
@@ -81,7 +82,7 @@ function edgeEnds(source: PositionedNode, target: PositionedNode) {
 }
 
 function lineLabel(value: string) {
-  return value.replaceAll("_", " ");
+  return ({ subtype_of: "⊑ · subtype of", source_broader_topic: "↗ · broader topic", source_subtopic_of: "↗ · source subtopic of" } as Record<string, string>)[value] ?? value.replaceAll("_", " ");
 }
 
 function splitNodeLabel(label: string) {
@@ -123,7 +124,7 @@ function placeRelationLabels(
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const length = Math.max(1, Math.hypot(dx, dy));
-    const displayedPredicate = edge.predicate === "subtype_of" ? "⊆ · subtype of" : lineLabel(edge.predicate);
+    const displayedPredicate = edge.predicate === "subtype_of" ? "⊑ · subtype of" : lineLabel(edge.predicate);
     const labelWidth = Math.max(76, displayedPredicate.length * 7.5 + 25);
     let best: { cost: number; x: number; y: number; anchorX: number; anchorY: number; rect: LabelRect } | null = null;
 
@@ -262,7 +263,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
             const target = layout.positioned.get(edge.target);
             if (!source || !target) return null;
             const { start, end } = edgeEnds(source, target);
-            const predicate = edge.predicate === "subtype_of" ? "⊆ · subtype of" : lineLabel(edge.predicate);
+            const predicate = edge.predicate === "subtype_of" ? "⊑ · subtype of" : lineLabel(edge.predicate);
             const placement = labels.get(edge.id);
             if (!placement) return null;
             const labelX = placement.x;
@@ -335,7 +336,7 @@ function ConnectionDiagram({ data }: { data: ConceptDocumentation }) {
       {selected ? (
         <div className={styles.inspector} aria-live="polite">
           <span>{selected.source}</span>
-          <span className={styles.selectedPredicate}>{selected.predicate === "subtype_of" ? "⊆ · subtype of" : selected.predicate.replaceAll("_", " ")} →</span>
+          <span className={styles.selectedPredicate}>{selected.predicate === "subtype_of" ? "⊑ · subtype of" : selected.predicate.replaceAll("_", " ")} →</span>
           <span>{selected.target}</span>
           <code className={styles.assertionId} title={"Source relation: " + selected.id}>{selected.id.slice(0, 8)}</code>
         </div>
@@ -396,6 +397,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
   return (
     <div className={styles.documentation}>
       <ConnectionDiagram data={data} />
+      <p className={styles.profileNote}>⊑ class inclusion · ∧ both recorded conditions · ⇒ conditional consequence. Topic arrows (↗) describe source organization.</p>
 
       <section className={styles.relationProfile} aria-label="Recorded relation profile">
         <div className={styles.sectionHeading}>
@@ -565,6 +567,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
             {data.scoped_derivations.filter(item => item.rule_application_checked).map(item => (
               <li key={item.rule + item.text + item.premise_ids.join(",")}>
                 <p>{item.text}</p>
+                <div className={styles.formalExpression} role="math">{renderRecordedLogic(item.expression, new Map(data.graph.nodes.map(n => [n.id ?? n.slug, n.label])))}</div>
                 <small>{item.rule.replaceAll("_", " ")} · {item.premise_ids.map(id => (
                   <span key={id}><a href={"#assertion-" + id}>Obs. {numbered.get(id)}</a>{" "}</span>
                 ))}</small>
