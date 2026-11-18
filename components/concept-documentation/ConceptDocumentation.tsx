@@ -373,7 +373,8 @@ function EvidenceStatement({
           <p className={styles.symbolicStatement}>{statement.source.replaceAll("-", " ")} ⊑ {statement.target.replaceAll("-", " ")}</p>
         ) : null}
         <small className={styles.statementContext}>
-          {statement.predicate.replaceAll("_", " ")} · {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
+          {statement.predicate.replaceAll("_", " ")}
+          {statement.predicate.startsWith("source_") ? " · source record · not a subtype premise" : " · recorded assertion"} · {statement.hop} {statement.hop === 1 ? "hop" : "hops"}
           <span title={"Original relation UUID: " + statement.id}> · <code>{statement.id.slice(0, 8)}</code></span>
         </small>
       </div>
@@ -420,8 +421,8 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
         </div>
         {!data.characterization ? (
           <p className={styles.profileNote}>
-            No class characterization can be assembled from recorded direct subtype assertions.
-            The observations below remain available individually.
+            No characterization is available from admitted statements for this concept.
+            Source topic links are displayed as records and do not establish class inclusion.
           </p>
         ) : null}
         {data.relation_profile.retrieval_truncated ? (
@@ -435,7 +436,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
         <section className={styles.characterization} aria-label="Generated definition">
           <div className={styles.definitionTitle}>
             <h2 className={styles.academicHeading}>Definition 01</h2>
-            <span title="Automatically composed from provisional V1 graph assertions; not independently verified.">
+            <span title="Automatically composed from recorded assertions; not independently verified.">
               {data.source.kind === "legacy_concept_relation_tables" ? "Draft · V1" : "Draft · staging"}
             </span>
           </div>
@@ -465,7 +466,7 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
       <section className={styles.bodySection} aria-label="Recorded observations">
         <div className={styles.sectionHeading}>
           <h2>Observations</h2>
-          <span className={styles.count}>{statements.length} recorded</span>
+          <span className={styles.count}>{firstHand.length} directly recorded</span>
         </div>
         {firstHand.length ? (
           <ol className={styles.observations}>
@@ -482,7 +483,8 @@ export function ConceptDocumentationView({ data }: { data: ConceptDocumentation 
         )}
         {extended.length ? (
           <details className={styles.extended}>
-            <summary>{extended.length} further observations from connected concepts</summary>
+            <summary>Neighborhood context · {extended.length} statements about connected concepts</summary>
+            <p>These statements concern neighboring concepts. They are not additional facts or inferred conclusions about {data.concept.label}.</p>
             <ol className={styles.observations}>
               {extended.map((statement) => (
                 <EvidenceStatement
