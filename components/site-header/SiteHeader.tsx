@@ -22,6 +22,8 @@ export function SiteHeader() {
       </Link>
 
       <nav className={styles.navigation} aria-label="Primary navigation">
+        <Link href="/concepts">Concepts</Link>
+        <Link href="/atlas">Atlas</Link>
         <button
           className={styles.futureControl}
           type="button"

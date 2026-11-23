@@ -1,0 +1,9 @@
+.main { max-width: 72rem; margin: 3rem auto; padding: 0 1.5rem; min-height: 65vh; }
+.main h1 { font-size: 2.5rem; }
+.main p { line-height: 1.65; overflow-wrap: anywhere; }
+.sources { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0; }
+.sources a[aria-current] { font-weight: 700; }
+.provenance { padding: 1.5rem; background: #f1f5f1; border: 1px solid #d4dfd4; border-radius: .5rem; margin: 2rem 0; }
+.provenance code { overflow-wrap: anywhere; }
+.nodes { padding: 0; list-style: none; }
+.nodes li { border-bottom: 1px solid #d4dfd4; padding: 1.5rem 0; }
