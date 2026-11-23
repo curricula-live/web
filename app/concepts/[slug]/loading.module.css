@@ -1,0 +1,23 @@
+.page { display:grid; grid-template-rows:auto 1fr auto; min-height:100vh; }
+.main { width:min(100% - 3rem,68rem); margin:0 auto; padding:clamp(3rem,8vh,6rem) 0 5rem; }
+.eyebrow { font-size:.72rem; color:var(--color-accent); font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.main h1 { font-family:var(--font-display); font-weight:400; font-size:clamp(2rem,4vw,3.2rem); letter-spacing:-.035em; margin:.4rem 0; }
+.description,.note { color:var(--color-text-muted); line-height:1.7; }
+.canvas { border:1px solid var(--color-border); background:var(--color-surface); border-radius:.7rem; height:clamp(290px,40vw,460px); margin:2.5rem 0 1rem; padding:clamp(2rem,6vw,4rem); overflow:hidden; position:relative; }
+.branch { display:flex; justify-content:center; align-items:center; height:55%; position:relative; }
+.node,.nodeSecondary,.nodeTertiary { display:flex; width:90px; height:58px; flex-shrink:0; align-items:center; justify-content:center; border:1.5px solid var(--color-accent); border-radius:8px; background:var(--color-surface); }
+.node img { animation:leafBreath 2s ease-in-out infinite; }
+.nodeSecondary,.nodeTertiary { border-color:var(--color-border); animation:relationGlow 2.6s ease-in-out infinite; }
+.nodeTertiary { animation-delay:.8s; }
+.beam,.beamTwo { height:2px; width:clamp(25px,8vw,120px); background:linear-gradient(to right,var(--color-border),var(--color-accent)); position:relative; overflow:hidden; }
+.beam:after,.beamTwo:after { content:""; position:absolute; width:25%; height:100%; background:var(--color-accent); animation:travel 1.8s linear infinite; }
+.beamTwo:after { animation-delay:.7s; }
+.skeleton { width:min(400px,90%); margin:0 auto; display:grid; gap:14px; }
+.longBar,.shortBar { display:block; height:9px; border-radius:8px; background:var(--color-border); animation:relationGlow 2s ease-in-out infinite; }
+.shortBar { width:52%; animation-delay:.35s; }
+.longBar:last-child { width:77%; animation-delay:.75s; }
+.note { font-size:.83rem; }
+@keyframes travel { from{transform:translateX(-130%);}to{transform:translateX(520%);} }
+@keyframes relationGlow { 50%{opacity:.38;} }
+@keyframes leafBreath { 50%{transform:scale(.9) rotate(7deg);opacity:.6;} }
+@media(prefers-reduced-motion:reduce) { .canvas *,.canvas *:after{animation:none!important;} }

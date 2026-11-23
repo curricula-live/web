@@ -37,5 +37,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Validate typed formal notation
+        run: node --experimental-strip-types scripts/verify-formal-notation.mjs
+
+      - name: Verify ontology concept boundary
+        run: node --experimental-strip-types scripts/verify-atlas-concept-boundary.mjs
+
       - name: Build
         run: npm run build
