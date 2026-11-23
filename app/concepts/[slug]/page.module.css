@@ -181,3 +181,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Experimental source-backed overview, separate from reviewed scholarly evidence. */
+.documentationContent {
+  margin-top: var(--space-8);
+}

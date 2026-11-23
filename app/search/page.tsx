@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer/SiteFooter";
 import { SiteHeader } from "@/components/site-header/SiteHeader";
 import {
   GraphApiError,
+  KNOWLEDGE_PREVIEW_ENABLED,
   searchGraph,
   type RelationSummary,
   type SearchCategory,
@@ -160,7 +161,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   }
 
-  if (query && category !== "connections") {
+  if (query && category !== "connections" && !KNOWLEDGE_PREVIEW_ENABLED) {
     try {
       atlasMatches = await searchAtlas(query);
     } catch (error) {
@@ -229,7 +230,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <p>Enter a concept or relationship above.</p>
           </section>
         )}
-        {query && category !== "connections" && (
+        {query && category !== "connections" && !KNOWLEDGE_PREVIEW_ENABLED && (
           <section className={styles.section} aria-labelledby="atlas-results-title">
             <h2 id="atlas-results-title">Ontology atlas · V1</h2>
             <p className={styles.empty}>

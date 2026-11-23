@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { ConceptEvidence } from "@/components/concept-evidence/ConceptEvidence";
+import { ConceptDocumentationView } from "@/components/concept-documentation/ConceptDocumentation";
 import { notFound } from "next/navigation";
 
 import { SiteFooter } from "@/components/site-footer/SiteFooter";
@@ -6,8 +9,10 @@ import { SiteHeader } from "@/components/site-header/SiteHeader";
 import {
   getConcept,
   getConceptNeighborhood,
+  getConceptDocumentation,
   GraphApiError,
   type ConceptNeighborhood,
+  type ConceptDocumentation,
   type RelationSummary,
 } from "@/lib/api/graph";
 import { humanizeSlug } from "@/lib/format";
@@ -16,7 +21,7 @@ import styles from "./page.module.css";
 
 type ConceptPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string | string[] }>;
+  searchParams: Promise<{ view?: string | string[]; depth?: string | string[] }>;
 };
 
 type ConceptView = "overview" | "connections" | "curriculum" | "pedagogical";
@@ -82,7 +87,9 @@ function RelationGroup({
 
 export default async function ConceptPage({ params, searchParams }: ConceptPageProps) {
   const { slug } = await params;
-  const view = parseView((await searchParams).view);
+  const query = await searchParams;
+  const view = parseView(query.view);
+  const depth = 5;
 
   let conceptExists = false;
   let apiUnavailable = false;
@@ -111,6 +118,20 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
     }
   }
 
+  let documentation: ConceptDocumentation | null = null;
+  let documentationUnavailable = false;
+
+  if (conceptExists && view === "overview") {
+    try {
+      documentation = await getConceptDocumentation(slug, depth);
+    } catch (error) {
+      documentationUnavailable = true;
+      if (!(error instanceof GraphApiError)) {
+        console.error("Unexpected concept documentation error", error);
+      }
+    }
+  }
+
   return (
     <div className={styles.page}>
       <SiteHeader />
@@ -118,7 +139,7 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
         <header className={styles.conceptHeader}>
           <p className={styles.kind}>Concept</p>
           <h1>{humanizeSlug(slug)}</h1>
-          <p className={styles.canonical}>{slug}</p>
+          <p className={styles.canonical}>{slug} · <Link href="/concepts">Browse all concepts</Link></p>
         </header>
 
         <nav className={styles.views} aria-label="Concept sections">
@@ -160,9 +181,9 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
         ) : view === "curriculum" ? (
           <section className={styles.state}>
             <p className={styles.sectionLabel}>Curriculum</p>
-            <h2>Curriculum mappings are not available yet.</h2>
+            <h2>Curriculum mappings</h2>
             <p>
-              This section is reserved for references showing where the concept is taught.
+              Reviewed source associations appear in the evidence section below.
             </p>
           </section>
         ) : view === "pedagogical" ? (
@@ -174,17 +195,22 @@ export default async function ConceptPage({ params, searchParams }: ConceptPageP
             </p>
           </section>
         ) : (
-          <section className={styles.content} aria-labelledby="overview-title">
-            <div className={styles.sectionIntro}>
-              <p className={styles.sectionLabel}>Overview</p>
-              <h2 id="overview-title">Structured documentation</h2>
-              <p>
-                Definitions, key points, examples and misconceptions have not been added for this
-                concept yet.
+          <section className={styles.content} aria-label="Concept details">
+            {documentation ? (
+              <div className={styles.documentationContent}>
+                <ConceptDocumentationView data={documentation} />
+              </div>
+            ) : documentationUnavailable ? (
+              <p className={styles.muted}>
+                Graph-derived documentation is temporarily unavailable. Recorded facts are not
+                replaced with unverified text.
               </p>
-            </div>
+            ) : null}
           </section>
         )}
+        {conceptExists && view === "curriculum" ? (
+          <Suspense fallback={<p>Loading scholarly evidence…</p>}><ConceptEvidence slug={slug} /></Suspense>
+        ) : null}
       </main>
       <SiteFooter />
     </div>
