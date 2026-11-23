@@ -7,4 +7,3 @@ export function renderRecordedLogic(expression: RecordedLogic | undefined, label
   const endpoint = (e: { kind: string; id?: string; name?: string }) => e.kind === "variable" ? e.name : labels.get(e.id ?? "") ?? e.id;
   return expression.symbol + "(" + endpoint(expression.subject) + ", " + endpoint(expression.object) + ")";
 }
-
